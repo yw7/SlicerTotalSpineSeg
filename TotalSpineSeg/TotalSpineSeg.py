@@ -777,7 +777,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         except ModuleNotFoundError as e:
           raise InstallError("This module requires PyTorch extension. Install it from the Extensions Manager.")
 
-        minimumTorchVersion = "2.0.0"  # per https://github.com/wasserth/TotalSpineSeg/blob/7274faac4673298d17b63a5a8335006f02e6d426/setup.py#L19
+        minimumTorchVersion = "2.0.0"  # per https://github.com/neuropoly/totalspineseg requirements
         torchLogic = PyTorchUtils.PyTorchUtilsLogic()
         if not torchLogic.torchInstalled():
             confirmPackagesToInstall.append("PyTorch")
@@ -787,7 +787,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         except ModuleNotFoundError as e:
             raise InstallError("This module requires SlicerNNUNet extension. Install it from the Extensions Manager.")
 
-        minimumNNUNetVersion = "2.2.1"  # per https://github.com/wasserth/TotalSpineSeg/blob/7274faac4673298d17b63a5a8335006f02e6d426/setup.py#L26
+        minimumNNUNetVersion = "2.2.1"  # per https://github.com/neuropoly/totalspineseg requirements
         nnunetlogic = SlicerNNUNetLib.InstallLogic(doAskConfirmation=False)
         nnunetlogic.getInstalledNNUnetVersion()
         from packaging.requirements import Requirement
@@ -959,7 +959,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         :param outputVolume: thresholding result
         :param fast: faster and less accurate output
         :param task: one of self.tasks, default is "total"
-        :param subset: a list of structures (TotalSpineSeg classe names https://github.com/wasserth/TotalSpineSeg#class-detailsTotalSpineSeg) to segment.
+        :param subset: a list of structures (TotalSpineSeg class names https://github.com/neuropoly/totalspineseg) to segment.
           Default is None, which means that all available structures will be segmented."
         :param interactive: set to True to enable warning popups to be shown to users
         :param sequenceBrowserNode: if specified then all frames of the inputVolume sequence will be segmented
