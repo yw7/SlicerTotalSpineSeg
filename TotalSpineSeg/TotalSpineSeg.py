@@ -136,7 +136,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """
         Called each time the user opens a different module.
         """
-        # Do not react to parameter node changes (GUI wlil be updated when the user enters into the module)
+        # Do not react to parameter node changes (GUI will be updated when the user enters into the module)
         self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGUIFromParameterNode)
 
     def onSceneStartClose(self, caller, event):
@@ -643,7 +643,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
     def installedTotalSpineSegPythonPackageInfo(self):
         import shutil
         import subprocess
-        versionInfo = subprocess.check_output([shutil.which('PythonSlicer'), "-m", "pip", "show", "TotalSpineSeg"]).decode()
+        versionInfo = subprocess.check_output([shutil.which('PythonSlicer'), "-m", "pip", "show", "totalspineseg"]).decode()
 
         # Get download URL, as the version information does not contain the github hash
         downloadUrl = self.installedTotalSpineSegPythonPackageDownloadUrl()
@@ -833,7 +833,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         # (it would replace Slicer's "requests")
         needToInstallSegmenter = False
         try:
-            import totalsegmentator
+            import totalspineseg
             if not upgrade:
                 # Check if we need to update TotalSpineSeg Python package version
                 downloadUrl = self.installedTotalSpineSegPythonPackageDownloadUrl()
@@ -852,11 +852,11 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
 
             if upgrade:
                 # TotalSpineSeg version information is usually not updated with each git revision, therefore we must uninstall it to force the upgrade
-                slicer.util.pip_uninstall("TotalSpineSeg")
+                slicer.util.pip_uninstall("totalspineseg")
 
             # Update TotalSpineSeg and all its dependencies
             self.pipInstallSelective(
-                "TotalSpineSeg",
+                "totalspineseg",
                 self.totalSpineSegPythonPackageDownloadUrl + (" --upgrade" if upgrade else ""),
                 packagesToSkip)
 
@@ -933,15 +933,19 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
 
         # Get arguments
         import sysconfig
-        totalSpineSegLicenseToolExecutablePath = os.path.join(sysconfig.get_path('scripts'), TotalSpineSegLogic.executableName("totalseg_set_license"))
-        cmd = [pythonSlicerExecutablePath, totalSpineSegLicenseToolExecutablePath, "-l", licenseStr]
-
+        # TODO: TotalSpineSeg doesn't have a license tool like TotalSegmentator
+        # This functionality needs to be removed or adapted based on actual TotalSpineSeg requirements
+        raise NotImplementedError("License setting is not supported for TotalSpineSeg. This feature is specific to TotalSegmentator.")
+        
+        # Commented out original TotalSegmentator license code:
+        # totalSpineSegLicenseToolExecutablePath = os.path.join(sysconfig.get_path('scripts'), TotalSpineSegLogic.executableName("totalseg_set_license"))
+        # cmd = [pythonSlicerExecutablePath, totalSpineSegLicenseToolExecutablePath, "-l", licenseStr]
         # Launch command
-        logging.debug(f"Launch TotalSpineSeg license tool: {cmd}")
-        proc = slicer.util.launchConsoleProcess(cmd)
-        licenseToolOutput = self.logProcessOutput(proc, returnOutput=True)
-        if "ERROR: Invalid license number" in licenseToolOutput:
-            raise ValueError('Invalid license number. Please check your license number or contact support.')
+        # logging.debug(f"Launch TotalSpineSeg license tool: {cmd}")
+        # proc = slicer.util.launchConsoleProcess(cmd)
+        # licenseToolOutput = self.logProcessOutput(proc, returnOutput=True)
+        # if "ERROR: Invalid license number" in licenseToolOutput:
+        #     raise ValueError('Invalid license number. Please check your license number or contact support.')
 
         self.log(_('License has been successfully set.'))
 
@@ -1010,9 +1014,9 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
                 fast = True
 
         # Get TotalSpineSeg launcher command
-        # TotalSpineSeg (.py file, without extension) is installed in Python Scripts folder
+        # totalspineseg (lowercase) is installed in Python Scripts folder based on pyproject.toml
         import sysconfig
-        totalSpineSegExecutablePath = os.path.join(sysconfig.get_path('scripts'), TotalSpineSegLogic.executableName("TotalSpineSeg"))
+        totalSpineSegExecutablePath = os.path.join(sysconfig.get_path('scripts'), TotalSpineSegLogic.executableName("totalspineseg"))
         # Get Python executable path
         import shutil
         pythonSlicerExecutablePath = shutil.which('PythonSlicer')
@@ -1151,8 +1155,11 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         # Get label descriptions
 
         # Get label descriptions if task is provided
-        from totalsegmentator.map_to_binary import class_map
-        labelValueToSegmentName = class_map[task] if task else {}
+        # TODO: Integrate with totalspineseg package label mapping
+        # The totalspineseg package has a different structure than totalsegmentator
+        # and doesn't have a class_map module. Label mapping needs to be implemented
+        # based on the actual totalspineseg output structure.
+        labelValueToSegmentName = {}  # Placeholder - needs actual implementation
 
         def import_labelmap_to_segmentation(labelmapVolumeNode, segmentName, segmentId):
             updatedSegmentIds = vtk.vtkStringArray()
@@ -1188,10 +1195,13 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
     def readSegmentation(self, outputSegmentation, outputSegmentationFile, task):
 
         # Get label descriptions
-        from totalsegmentator.map_to_binary import class_map
-        labelValueToSegmentName = class_map[task]
-        maxLabelValue = max(labelValueToSegmentName.keys())
-        if min(labelValueToSegmentName.keys()) < 0:
+        # TODO: Integrate with totalspineseg package label mapping
+        # The totalspineseg package has a different structure than totalsegmentator
+        # and doesn't have a class_map module. Label mapping needs to be implemented
+        # based on the actual totalspineseg output structure.
+        labelValueToSegmentName = {}  # Placeholder - needs actual implementation
+        maxLabelValue = max(labelValueToSegmentName.keys()) if labelValueToSegmentName else 0
+        if labelValueToSegmentName and min(labelValueToSegmentName.keys()) < 0:
             raise RuntimeError("Label values in class_map must be positive")
 
         # Get color node with random colors
