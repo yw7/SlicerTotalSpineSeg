@@ -7,8 +7,10 @@ set(MODULE_PYTHON_SCRIPTS
   )
 
 set(MODULE_PYTHON_RESOURCES
+  Resources/SegmentationCategoryTypeModifier-${MODULE_NAME}.term.json
   Resources/Icons/${MODULE_NAME}.png
   Resources/UI/${MODULE_NAME}.ui
+  Resources/totalspineseg_snomed_mapping.csv
   )
 
 #-----------------------------------------------------------------------------

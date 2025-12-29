@@ -398,12 +398,12 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         # otherwise the DICOM terminology will be used. This is necessary because the DICOM terminology
         # does not contain all the necessary items and some items are incomplete (e.g., don't have color or 3D Slicer label).
         #
-        self.totalSegmentatorTerminologyPropertyTypes = []
+        self.totalSpineSegTerminologyPropertyTypes = []
 
         # Map from TotalSpineSeg structure name to terminology string.
         # Terminology string uses Slicer terminology entry format - see specification at
         # https://slicer.readthedocs.io/en/latest/developer_guide/modules/segmentations.html#terminologyentry-tag
-        self.totalSegmentatorLabelTerminology = {}
+        self.totalSpineSegLabelTerminology = {}
 
         # Segmentation tasks specified by TotalSpineSeg
         # Ideally, this information should be provided by TotalSpineSeg itself.
@@ -464,48 +464,48 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         """
 
         moduleDir = os.path.dirname(slicer.util.getModule('TotalSpineSeg').path)
-        totalSegmentatorTerminologyMappingFilePath = os.path.join(moduleDir, 'Resources', 'totalsegmentator_snomed_mapping.csv')
+        totalSpineSegTerminologyMappingFilePath = os.path.join(moduleDir, 'Resources', 'totalspineseg_snomed_mapping.csv')
 
         terminologiesLogic = slicer.util.getModuleLogic('Terminologies')
-        totalSegmentatorTerminologyName = "Segmentation category and type - Total Segmentator"
+        totalSpineSegTerminologyName = "Segmentation category and type - Total Spine Seg"
 
         anatomicalStructureCategory = slicer.vtkSlicerTerminologyCategory()
-        numberOfCategories = terminologiesLogic.GetNumberOfCategoriesInTerminology(totalSegmentatorTerminologyName)
+        numberOfCategories = terminologiesLogic.GetNumberOfCategoriesInTerminology(totalSpineSegTerminologyName)
         for i in range(numberOfCategories):
-            terminologiesLogic.GetNthCategoryInTerminology(totalSegmentatorTerminologyName, i, anatomicalStructureCategory)
+            terminologiesLogic.GetNthCategoryInTerminology(totalSpineSegTerminologyName, i, anatomicalStructureCategory)
             if anatomicalStructureCategory.GetCodingSchemeDesignator() == 'SCT' and anatomicalStructureCategory.GetCodeValue() == '123037004':
                 # Found the (123037004, SCT, "Anatomical Structure") category within DICOM master list
                 break
 
         alteredStructureCategory = slicer.vtkSlicerTerminologyCategory()
         for i in range(numberOfCategories):
-            terminologiesLogic.GetNthCategoryInTerminology(totalSegmentatorTerminologyName, i, alteredStructureCategory)
+            terminologiesLogic.GetNthCategoryInTerminology(totalSpineSegTerminologyName, i, alteredStructureCategory)
             if alteredStructureCategory.GetCodingSchemeDesignator() == 'SCT' and alteredStructureCategory.GetCodeValue() == '49755003':
                 # Found the (49755003, SCT, "Morphologically Altered Structure") category within DICOM master list
                 break
 
         bodySubstanceCategory = slicer.vtkSlicerTerminologyCategory()
         for i in range(numberOfCategories):
-            terminologiesLogic.GetNthCategoryInTerminology(totalSegmentatorTerminologyName, i, bodySubstanceCategory)
+            terminologiesLogic.GetNthCategoryInTerminology(totalSpineSegTerminologyName, i, bodySubstanceCategory)
             if bodySubstanceCategory.GetCodingSchemeDesignator() == 'SCT' and bodySubstanceCategory.GetCodeValue() == '91720002':
                 # Found the (91720002, SCT, "Body Substance") category within DICOM master list
                 break
 
         # Retrieve all property type codes from the TotalSpineSeg terminology
-        self.totalSegmentatorTerminologyPropertyTypes = []
+        self.totalSpineSegTerminologyPropertyTypes = []
         terminologyType = slicer.vtkSlicerTerminologyType()
-        numberOfTypes = terminologiesLogic.GetNumberOfTypesInTerminologyCategory(totalSegmentatorTerminologyName, anatomicalStructureCategory)
+        numberOfTypes = terminologiesLogic.GetNumberOfTypesInTerminologyCategory(totalSpineSegTerminologyName, anatomicalStructureCategory)
         for i in range(numberOfTypes):
-            if terminologiesLogic.GetNthTypeInTerminologyCategory(totalSegmentatorTerminologyName, anatomicalStructureCategory, i, terminologyType):
-                self.totalSegmentatorTerminologyPropertyTypes.append(terminologyType.GetCodingSchemeDesignator() + "^" + terminologyType.GetCodeValue())
-        numberOfTypes = terminologiesLogic.GetNumberOfTypesInTerminologyCategory(totalSegmentatorTerminologyName, alteredStructureCategory)
+            if terminologiesLogic.GetNthTypeInTerminologyCategory(totalSpineSegTerminologyName, anatomicalStructureCategory, i, terminologyType):
+                self.totalSpineSegTerminologyPropertyTypes.append(terminologyType.GetCodingSchemeDesignator() + "^" + terminologyType.GetCodeValue())
+        numberOfTypes = terminologiesLogic.GetNumberOfTypesInTerminologyCategory(totalSpineSegTerminologyName, alteredStructureCategory)
         for i in range(numberOfTypes):
-            if terminologiesLogic.GetNthTypeInTerminologyCategory(totalSegmentatorTerminologyName, alteredStructureCategory, i, terminologyType):
-                self.totalSegmentatorTerminologyPropertyTypes.append(terminologyType.GetCodingSchemeDesignator() + "^" + terminologyType.GetCodeValue())
-        numberOfTypes = terminologiesLogic.GetNumberOfTypesInTerminologyCategory(totalSegmentatorTerminologyName, bodySubstanceCategory)
+            if terminologiesLogic.GetNthTypeInTerminologyCategory(totalSpineSegTerminologyName, alteredStructureCategory, i, terminologyType):
+                self.totalSpineSegTerminologyPropertyTypes.append(terminologyType.GetCodingSchemeDesignator() + "^" + terminologyType.GetCodeValue())
+        numberOfTypes = terminologiesLogic.GetNumberOfTypesInTerminologyCategory(totalSpineSegTerminologyName, bodySubstanceCategory)
         for i in range(numberOfTypes):
-            if terminologiesLogic.GetNthTypeInTerminologyCategory(totalSegmentatorTerminologyName, bodySubstanceCategory, i, terminologyType):
-                self.totalSegmentatorTerminologyPropertyTypes.append(terminologyType.GetCodingSchemeDesignator() + "^" + terminologyType.GetCodeValue())
+            if terminologiesLogic.GetNthTypeInTerminologyCategory(totalSpineSegTerminologyName, bodySubstanceCategory, i, terminologyType):
+                self.totalSpineSegTerminologyPropertyTypes.append(terminologyType.GetCodingSchemeDesignator() + "^" + terminologyType.GetCodeValue())
 
         # Helper function to get code string from CSV file row
         def getCodeString(field, columnNames, row):
@@ -521,7 +521,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             return columnValues
 
         import csv
-        with open(totalSegmentatorTerminologyMappingFilePath, "r") as f:
+        with open(totalSpineSegTerminologyMappingFilePath, "r") as f:
             reader = csv.reader(f)
             columnNames = next(reader)
             data = {}
@@ -551,14 +551,14 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
                 terminologyPropertyTypeStr = (  # Example: SCT^23451007
                     row[columnNames.index("Type_CodingScheme")]
                     + "^" + row[columnNames.index("Type_CodeValue")])
-                if terminologyPropertyTypeStr in self.totalSegmentatorTerminologyPropertyTypes:
-                    terminologyEntryStr = "Segmentation category and type - Total Segmentator" + terminologyEntryStrWithoutCategoryName
+                if terminologyPropertyTypeStr in self.totalSpineSegTerminologyPropertyTypes:
+                    terminologyEntryStr = "Segmentation category and type - Total Spine Seg" + terminologyEntryStrWithoutCategoryName
                 else:
                     terminologyEntryStr = "Segmentation category and type - DICOM master list" + terminologyEntryStrWithoutCategoryName
 
                 # Store the terminology string for this structure
-                totalSegmentatorStructureName = row[columnNames.index("Name")]  # TotalSpineSeg structure name, such as "adrenal_gland_left"
-                self.totalSegmentatorLabelTerminology[totalSegmentatorStructureName] = terminologyEntryStr
+                totalSpineSegStructureName = row[columnNames.index("Name")]  # TotalSpineSeg structure name, such as "adrenal_gland_left"
+                self.totalSpineSegLabelTerminology[totalSpineSegStructureName] = terminologyEntryStr
 
 
     def isFastModeSupportedForTask(self, task):
@@ -837,18 +837,18 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             if not upgrade:
                 # Check if we need to update TotalSpineSeg Python package version
                 downloadUrl = self.installedTotalSpineSegPythonPackageDownloadUrl()
-                if downloadUrl and (downloadUrl != self.totalSegmentatorPythonPackageDownloadUrl):
+                if downloadUrl and (downloadUrl != self.totalSpineSegPythonPackageDownloadUrl):
                     # TotalSpineSeg have been already installed from GitHub, from a different URL that this module needs
                     if not slicer.util.confirmOkCancelDisplay(
                         _("This module requires TotalSpineSeg Python package update."),
-                        detailedText=_("Currently installed: {downloadUrl}\n\nRequired: {requiredUrl}").format(downloadUrl=downloadUrl, requiredUrl=self.totalSegmentatorPythonPackageDownloadUrl)):
+                        detailedText=_("Currently installed: {downloadUrl}\n\nRequired: {requiredUrl}").format(downloadUrl=downloadUrl, requiredUrl=self.totalSpineSegPythonPackageDownloadUrl)):
                       raise ValueError('TotalSpineSeg update was cancelled.')
                     upgrade = True
         except ModuleNotFoundError as e:
             needToInstallSegmenter = True
 
         if needToInstallSegmenter or upgrade:
-            self.log(_('TotalSpineSeg Python package is required. Installing it from {downloadUrl}... (it may take several minutes)').format(downloadUrl=self.totalSegmentatorPythonPackageDownloadUrl))
+            self.log(_('TotalSpineSeg Python package is required. Installing it from {downloadUrl}... (it may take several minutes)').format(downloadUrl=self.totalSpineSegPythonPackageDownloadUrl))
 
             if upgrade:
                 # TotalSpineSeg version information is usually not updated with each git revision, therefore we must uninstall it to force the upgrade
@@ -857,7 +857,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             # Update TotalSpineSeg and all its dependencies
             self.pipInstallSelective(
                 "TotalSpineSeg",
-                self.totalSegmentatorPythonPackageDownloadUrl + (" --upgrade" if upgrade else ""),
+                self.totalSpineSegPythonPackageDownloadUrl + (" --upgrade" if upgrade else ""),
                 packagesToSkip)
 
             self.log(_('TotalSpineSeg installation completed successfully.'))
@@ -933,8 +933,8 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
 
         # Get arguments
         import sysconfig
-        totalSegmentatorLicenseToolExecutablePath = os.path.join(sysconfig.get_path('scripts'), TotalSpineSegLogic.executableName("totalseg_set_license"))
-        cmd = [pythonSlicerExecutablePath, totalSegmentatorLicenseToolExecutablePath, "-l", licenseStr]
+        totalSpineSegLicenseToolExecutablePath = os.path.join(sysconfig.get_path('scripts'), TotalSpineSegLogic.executableName("totalseg_set_license"))
+        cmd = [pythonSlicerExecutablePath, totalSpineSegLicenseToolExecutablePath, "-l", licenseStr]
 
         # Launch command
         logging.debug(f"Launch TotalSpineSeg license tool: {cmd}")
@@ -975,8 +975,8 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         startTime = time.time()
         self.log(_('Processing started'))
 
-        if self.totalSegmentatorWeightsPath:
-            os.environ["TOTALSEG_WEIGHTS_PATH"] = self.totalSegmentatorWeightsPath
+        if self.totalSpineSegWeightsPath:
+            os.environ["TOTALSEG_WEIGHTS_PATH"] = self.totalSpineSegWeightsPath
 
         # Create new empty folder
         tempFolder = slicer.util.tempDirectory()
@@ -1012,13 +1012,13 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         # Get TotalSpineSeg launcher command
         # TotalSpineSeg (.py file, without extension) is installed in Python Scripts folder
         import sysconfig
-        totalSegmentatorExecutablePath = os.path.join(sysconfig.get_path('scripts'), TotalSpineSegLogic.executableName("TotalSpineSeg"))
+        totalSpineSegExecutablePath = os.path.join(sysconfig.get_path('scripts'), TotalSpineSegLogic.executableName("TotalSpineSeg"))
         # Get Python executable path
         import shutil
         pythonSlicerExecutablePath = shutil.which('PythonSlicer')
         if not pythonSlicerExecutablePath:
             raise RuntimeError("Python was not found")
-        totalSegmentatorCommand = [ pythonSlicerExecutablePath, totalSegmentatorExecutablePath]
+        totalSpineSegCommand = [ pythonSlicerExecutablePath, totalSpineSegExecutablePath]
 
         inputVolumeSequence = None
         if sequenceBrowserNode:
@@ -1043,7 +1043,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
                 self.log(f"Segmenting item {i+1}/{numberOfItems} of sequence")
                 self.processVolume(inputFile, inputVolume,
                                    outputSegmentationFolder, outputSegmentation, outputSegmentationFile,
-                                   task, subset, cpu, totalSegmentatorCommand, fast)
+                                   task, subset, cpu, totalSpineSegCommand, fast)
                 sequenceBrowserNode.SelectNextItem()
             sequenceBrowserNode.SetSelectedItemNumber(selectedItemNumber)
 
@@ -1051,7 +1051,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             # Segment a single volume
             self.processVolume(inputFile, inputVolume,
                                outputSegmentationFolder, outputSegmentation, outputSegmentationFile,
-                               task, subset, cpu, totalSegmentatorCommand, fast)
+                               task, subset, cpu, totalSpineSegCommand, fast)
 
         stopTime = time.time()
         self.log(_("Processing completed in {time_elapsed:.2f} seconds").format(time_elapsed=stopTime-startTime))
@@ -1063,7 +1063,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         else:
             self.log(_("Not cleaning up temporary folder: {temp_folder}").format(temp_folder=tempFolder))
 
-    def processVolume(self, inputFile, inputVolume, outputSegmentationFolder, outputSegmentation, outputSegmentationFile, task, subset, cpu, totalSegmentatorCommand, fast):
+    def processVolume(self, inputFile, inputVolume, outputSegmentationFolder, outputSegmentation, outputSegmentationFile, task, subset, cpu, totalSpineSegCommand, fast):
         """Segment a single volume
         """
 
@@ -1107,15 +1107,15 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             # append each item of the subset
             for item in subset:
                 try:
-                    if self.totalSegmentatorLabelTerminology[item]:
+                    if self.totalSpineSegLabelTerminology[item]:
                         options.append(item)
                 except:
                     # Failed to get terminology info, item probably misspelled
                     raise ValueError("'" + item + "' is not a valid TotalSpineSeg label terminology.")
 
         self.log(_('Creating segmentations with TotalSpineSeg AI...'))
-        self.log(_("Total Segmentator arguments: {options}").format(options=options))
-        proc = slicer.util.launchConsoleProcess(totalSegmentatorCommand + options)
+        self.log(_("Total Spine Seg arguments: {options}").format(options=options))
+        proc = slicer.util.launchConsoleProcess(totalSpineSegCommand + options)
         self.logProcessOutput(proc)
 
         # Load result
@@ -1229,8 +1229,8 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         if not segment:
             # Segment is not present in this segmentation
             return
-        if segmentName in self.totalSegmentatorLabelTerminology:
-            terminologyEntryStr = self.totalSegmentatorLabelTerminology[segmentName]
+        if segmentName in self.totalSpineSegLabelTerminology:
+            terminologyEntryStr = self.totalSpineSegLabelTerminology[segmentName]
             segment.SetTag(segment.GetTerminologyEntryTagName(), terminologyEntryStr)
             try:
                 label, color = self.getSegmentLabelColor(terminologyEntryStr)

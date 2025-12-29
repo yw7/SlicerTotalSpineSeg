@@ -1,0 +1,17 @@
+{
+  "SegmentationCategoryTypeContextName": "Segmentation category and type - Total Spine Seg",
+  "@schema": "https://raw.githubusercontent.com/qiicr/dcmqi/master/doc/segment-context-schema.json#",
+  "SegmentationCodes": {
+    "Category": [
+      {
+        "CodeMeaning": "Anatomical Structure",
+        "CodingSchemeDesignator": "SCT",
+        "showAnatomy": false,
+        "cid": "7150",
+        "CodeValue": "123037004",
+        "contextGroupName": "SegmentationPropertyCategories",
+        "Type": []
+      }
+    ]
+  }
+}
