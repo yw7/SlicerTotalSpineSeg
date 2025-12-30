@@ -1,5 +1,8 @@
 # TotalSpineSeg
 
+![Extension Screenshot](https://github.com/user-attachments/assets/a42b324c-dc82-4b1b-ad3b-0fdb4d0d3fc5)
+![Extension Screenshot](https://github.com/user-attachments/assets/700d114a-8358-41e4-afaa-09e94ee3a2e5)
+
 3D Slicer extension for fully automatic spine MRI and CT segmentation using the [TotalSpineSeg AI model](https://github.com/neuropoly/totalspineseg).
 
 ## Acknowledgement
