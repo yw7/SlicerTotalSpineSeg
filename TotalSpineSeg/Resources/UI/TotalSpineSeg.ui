@@ -45,7 +45,7 @@
                </sizepolicy>
               </property>
               <property name="toolTip">
-               <string>Input abdominal, chest, or whole body CT.</string>
+               <string>Input spine MRI or CT (abdominal, chest, or whole body).</string>
               </property>
               <property name="nodeTypes">
                <stringlist notr="true">
@@ -93,7 +93,7 @@
                </sizepolicy>
               </property>
               <property name="toolTip">
-               <string>Optional localizer segmentation (Step 2 output or similar).</string>
+               <string>Optional localizer segmentation (Step 1 or Step 2 output).</string>
               </property>
               <property name="nodeTypes">
                <stringlist notr="true">
@@ -354,6 +354,23 @@
             </property>
            </widget>
           </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_Iso">
+            <property name="text">
+             <string>Isotropic output:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QCheckBox" name="isoCheckBox">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="toolTip">
+             <string>Keep the output at 1mm^3 isotropic resolution (as used by the model) instead of resampling back to the input space.</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
@@ -378,44 +395,39 @@
             <property name="text">
              <string/>
             </property>
+            <property name="toolTip">
+             <string>Force the algorithm to run on CPU even if a GPU is available. Useful if GPU memory is insufficient or for debugging.</string>
+            </property>
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QLabel" name="label_Iso">
-            <property name="text">
-             <string>Isotropic output:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QCheckBox" name="isoCheckBox">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
            <widget class="QLabel" name="label_Package">
             <property name="text">
              <string>TotalSpineSeg Python package:</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
+          <item row="1" column="1">
            <widget class="QPushButton" name="packageUpgradeButton">
             <property name="text">
              <string>Force reinstall</string>
             </property>
+            <property name="toolTip">
+             <string>Force re-installation of the TotalSpineSeg Python package and its dependencies.</string>
+            </property>
            </widget>
           </item>
-          <item row="3" column="0" colspan="2">
+          <item row="2" column="0" colspan="2">
            <widget class="QPushButton" name="packageInfoUpdateButton">
             <property name="text">
              <string>Get TotalSpineSeg package information</string>
             </property>
+            <property name="toolTip">
+             <string>Check the currently installed version of the TotalSpineSeg package.</string>
+            </property>
            </widget>
           </item>
-          <item row="4" column="0" colspan="2">
+          <item row="3" column="0" colspan="2">
            <widget class="ctkFittedTextBrowser" name="packageInfoTextBrowser">
             <property name="collapsed">
              <bool>false</bool>
@@ -432,6 +444,9 @@
          </property>
          <property name="text">
           <string>Apply</string>
+         </property>
+         <property name="toolTip">
+          <string>Run the segmentation algorithm with the selected inputs and settings.</string>
          </property>
         </widget>
        </item>
@@ -486,6 +501,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="toolTip">
+          <string>Select or load a Step 2 segmentation node.</string>
+         </property>
          <property name="nodeTypes">
           <stringlist notr="true">
            <string>vtkMRMLSegmentationNode</string>
@@ -527,6 +545,9 @@
          <property name="checkable">
           <bool>true</bool>
          </property>
+         <property name="toolTip">
+          <string>Toggle visibility of the Step 2 segmentation.</string>
+         </property>
         </widget>
        </item>
        <item row="1" column="4">
@@ -536,6 +557,9 @@
          </property>
          <property name="checkable">
           <bool>true</bool>
+         </property>
+         <property name="toolTip">
+          <string>Toggle 3D visibility of the Step 2 segmentation.</string>
          </property>
         </widget>
        </item>
@@ -555,6 +579,9 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>Select or load a Step 1 segmentation node.</string>
          </property>
          <property name="nodeTypes">
           <stringlist notr="true">
@@ -597,6 +624,9 @@
          <property name="checkable">
           <bool>true</bool>
          </property>
+         <property name="toolTip">
+          <string>Toggle visibility of the Step 1 segmentation.</string>
+         </property>
         </widget>
        </item>
        <item row="2" column="4">
@@ -606,6 +636,9 @@
          </property>
          <property name="checkable">
           <bool>true</bool>
+         </property>
+         <property name="toolTip">
+          <string>Toggle 3D visibility of the Step 1 segmentation.</string>
          </property>
         </widget>
        </item>
@@ -625,6 +658,9 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>Select or load a Levels segmentation node.</string>
          </property>
          <property name="nodeTypes">
           <stringlist notr="true">
@@ -667,6 +703,9 @@
          <property name="checkable">
           <bool>true</bool>
          </property>
+         <property name="toolTip">
+          <string>Toggle visibility of the Levels segmentation.</string>
+         </property>
         </widget>
        </item>
        <item row="3" column="4">
@@ -676,6 +715,9 @@
          </property>
          <property name="checkable">
           <bool>true</bool>
+         </property>
+         <property name="toolTip">
+          <string>Toggle 3D visibility of the Levels segmentation.</string>
          </property>
         </widget>
        </item>
@@ -695,6 +737,9 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>Select or load a Spinal Cord volume/segmentation node.</string>
          </property>
          <property name="nodeTypes">
           <stringlist notr="true">
@@ -737,6 +782,9 @@
          <property name="checkable">
           <bool>true</bool>
          </property>
+         <property name="toolTip">
+          <string>Toggle visibility of the Spinal Cord.</string>
+         </property>
         </widget>
        </item>
        <item row="4" column="4">
@@ -746,6 +794,9 @@
          </property>
          <property name="checkable">
           <bool>true</bool>
+         </property>
+         <property name="toolTip">
+          <string>Toggle 3D visibility of the Spinal Cord.</string>
          </property>
         </widget>
        </item>
@@ -765,6 +816,9 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>Select or load a Spinal Canal volume/segmentation node.</string>
          </property>
          <property name="nodeTypes">
           <stringlist notr="true">
@@ -807,6 +861,9 @@
          <property name="checkable">
           <bool>true</bool>
          </property>
+         <property name="toolTip">
+          <string>Toggle visibility of the Spinal Canal.</string>
+         </property>
         </widget>
        </item>
        <item row="5" column="4">
@@ -816,6 +873,9 @@
          </property>
          <property name="checkable">
           <bool>true</bool>
+         </property>
+         <property name="toolTip">
+          <string>Toggle 3D visibility of the Spinal Canal.</string>
          </property>
         </widget>
        </item>

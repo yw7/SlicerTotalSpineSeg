@@ -17,7 +17,7 @@ class TotalSpineSeg(ScriptedLoadableModule):
         self.parent.dependencies = []
         self.parent.contributors = ["Yehuda Warszawer (Sheba Medical Center), Nathan Molinier (Polytechnique Montreal), Anat Achiron, Julien Cohen-Adad"]
         self.parent.helpText = _("""
-3D Slicer extension for fully automatic whole body CT segmentation using TotalSpineSeg AI model.
+3D Slicer extension for fully automatic spine MRI and CT segmentation using TotalSpineSeg AI model.
 See more information in the <a href="https://github.com/neuropoly/SlicerTotalSpineSeg">extension documentation</a>.
 """)
         self.parent.acknowledgementText = _("""
@@ -787,6 +787,9 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
                 node.GetSegmentation().RemoveAllSegments()
                 slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(labelNode, node)
                 slicer.mrmlScene.RemoveNode(labelNode)
+                
+                if not node.GetDisplayNode():
+                    node.CreateDefaultDisplayNodes()
                 
                 if applyTerm:
                     self.applyTotalSpineSegTerminology(node)
