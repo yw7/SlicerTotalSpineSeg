@@ -93,7 +93,7 @@
                </sizepolicy>
               </property>
               <property name="toolTip">
-               <string>Optional localizer segmentation (Step 1 or Step 2 output).</string>
+               <string>Optional localizer segmentation (Step 1 or Step 2 output). Use this for short FOV scans not containing C1 or Sacrum to ensure accurate instance segmentation.</string>
               </property>
               <property name="nodeTypes">
                <stringlist notr="true">
@@ -170,7 +170,7 @@
              </sizepolicy>
             </property>
             <property name="toolTip">
-             <string>Store Step 2 segmentation result (optional).</string>
+             <string>Store Step 2 segmentation result (Canal, cord, and instance segmentation of vertebrae and discs).</string>
             </property>
             <property name="nodeTypes">
              <stringlist notr="true">
@@ -210,7 +210,7 @@
              </sizepolicy>
             </property>
             <property name="toolTip">
-             <string>Store Step 1 segmentation result.</string>
+             <string>Store Step 1 segmentation result (Canal, cord, vertebrae (binary), and instance segmentation of discs).</string>
             </property>
             <property name="nodeTypes">
              <stringlist notr="true">
@@ -250,7 +250,7 @@
              </sizepolicy>
             </property>
             <property name="toolTip">
-             <string>Store spinal cord segmentation.</string>
+             <string>Store spinal cord soft segmentation (probability map).</string>
             </property>
             <property name="nodeTypes">
              <stringlist notr="true">
@@ -290,7 +290,7 @@
              </sizepolicy>
             </property>
             <property name="toolTip">
-             <string>Store spinal canal segmentation.</string>
+             <string>Store spinal canal soft segmentation (probability map).</string>
             </property>
             <property name="nodeTypes">
              <stringlist notr="true">
@@ -330,7 +330,7 @@
              </sizepolicy>
             </property>
             <property name="toolTip">
-             <string>Store vertebral levels segmentation.</string>
+             <string>Store single-voxel vertebral levels at the posterior tip of each disc (similar to SCT).</string>
             </property>
             <property name="nodeTypes">
              <stringlist notr="true">
@@ -502,7 +502,7 @@
           </sizepolicy>
          </property>
          <property name="toolTip">
-          <string>Select or load a Step 2 segmentation node.</string>
+          <string>Select or load a Step 2 segmentation node (Canal, cord, and instance segmentation of vertebrae and discs).</string>
          </property>
          <property name="nodeTypes">
           <stringlist notr="true">
@@ -581,7 +581,7 @@
           </sizepolicy>
          </property>
          <property name="toolTip">
-          <string>Select or load a Step 1 segmentation node.</string>
+          <string>Select or load a Step 1 segmentation node (Canal, cord, vertebrae (binary), and instance segmentation of discs).</string>
          </property>
          <property name="nodeTypes">
           <stringlist notr="true">
