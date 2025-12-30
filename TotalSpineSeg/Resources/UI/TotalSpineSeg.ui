@@ -6,423 +6,835 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>230</width>
-    <height>441</height>
+    <width>320</width>
+    <height>600</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="ctkCollapsibleButton" name="inputsCollapsibleButton">
-     <property name="text">
-      <string>Inputs</string>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
      </property>
-     <layout class="QFormLayout" name="formLayout_2">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Input volume:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="qMRMLNodeComboBox" name="inputVolumeSelector">
-        <property name="toolTip">
-         <string>Input abdominal, chest, or whole body CT.</string>
-        </property>
-        <property name="nodeTypes">
-         <stringlist notr="true">
-          <string>vtkMRMLScalarVolumeNode</string>
-         </stringlist>
-        </property>
-        <property name="showChildNodeTypes">
-         <bool>false</bool>
-        </property>
-        <property name="addEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Segmentation task:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QComboBox" name="taskComboBox">
-        <property name="toolTip">
-         <string>Choose "total" for segmenting all structures, or any of the more specialized segmentation tasks (that segment only a handful of specific structures in a certain region).</string>
-        </property>
-       </widget>
-      </item>
+     <widget class="QWidget" name="predictTab">
+      <attribute name="title">
+       <string>Predict</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_Predict">
+       <item>
+        <widget class="ctkCollapsibleButton" name="inputsCollapsibleButton">
+         <property name="text">
+          <string>Inputs</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_Inputs">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_InputVolume">
+            <property name="text">
+             <string>Input:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_Input">
+            <item>
+             <widget class="qMRMLNodeComboBox" name="inputVolumeSelector">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Input abdominal, chest, or whole body CT.</string>
+              </property>
+              <property name="nodeTypes">
+               <stringlist notr="true">
+                <string>vtkMRMLScalarVolumeNode</string>
+               </stringlist>
+              </property>
+              <property name="showChildNodeTypes">
+               <bool>false</bool>
+              </property>
+              <property name="addEnabled">
+               <bool>false</bool>
+              </property>
+              <property name="removeEnabled">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="inputVolumeFileButton">
+              <property name="text">
+               <string>...</string>
+              </property>
+              <property name="toolTip">
+               <string>Load from file</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_InputLocalizer">
+            <property name="text">
+             <string>Localizer (optional):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_Localizer">
+            <item>
+             <widget class="qMRMLNodeComboBox" name="inputLocalizerSelector">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Optional localizer segmentation (Step 2 output or similar).</string>
+              </property>
+              <property name="nodeTypes">
+               <stringlist notr="true">
+                <string>vtkMRMLSegmentationNode</string>
+               </stringlist>
+              </property>
+              <property name="showChildNodeTypes">
+               <bool>false</bool>
+              </property>
+              <property name="noneEnabled">
+               <bool>true</bool>
+              </property>
+              <property name="addEnabled">
+               <bool>false</bool>
+              </property>
+              <property name="removeEnabled">
+               <bool>false</bool>
+              </property>
+              <property name="renameEnabled">
+               <bool>false</bool>
+              </property>
+              <property name="editEnabled">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="inputLocalizerFileButton">
+              <property name="text">
+               <string>...</string>
+              </property>
+              <property name="toolTip">
+               <string>Load from file</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="ctkCollapsibleButton" name="outputsCollapsibleButton">
+         <property name="text">
+          <string>Outputs</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_Outputs">
+          <item row="0" column="0" colspan="2">
+           <widget class="QCheckBox" name="applyTerminologyCheckBox">
+            <property name="text">
+             <string>Apply anatomical terminology</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="toolTip">
+             <string>If checked, segment names will be renamed to anatomical terms (e.g. vertebrae_C1). If unchecked, original labels are kept.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_Step2">
+            <property name="text">
+             <string>Step 2:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="qMRMLNodeComboBox" name="outputStep2Selector">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string>Store Step 2 segmentation result (optional).</string>
+            </property>
+            <property name="nodeTypes">
+             <stringlist notr="true">
+              <string>vtkMRMLSegmentationNode</string>
+             </stringlist>
+            </property>
+            <property name="baseName">
+             <string>TotalSpineSeg_step2</string>
+            </property>
+            <property name="noneEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="addEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="removeEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="renameEnabled">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_Step1">
+            <property name="text">
+             <string>Step 1:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="qMRMLNodeComboBox" name="outputStep1Selector">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string>Store Step 1 segmentation result.</string>
+            </property>
+            <property name="nodeTypes">
+             <stringlist notr="true">
+              <string>vtkMRMLSegmentationNode</string>
+             </stringlist>
+            </property>
+            <property name="baseName">
+             <string>TotalSpineSeg_step1</string>
+            </property>
+            <property name="noneEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="addEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="removeEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="renameEnabled">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_Cord">
+            <property name="text">
+             <string>Cord:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="qMRMLNodeComboBox" name="outputCordSelector">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string>Store spinal cord segmentation.</string>
+            </property>
+            <property name="nodeTypes">
+             <stringlist notr="true">
+              <string>vtkMRMLScalarVolumeNode</string>
+             </stringlist>
+            </property>
+            <property name="baseName">
+             <string>TotalSpineSeg_cord</string>
+            </property>
+            <property name="noneEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="addEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="removeEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="renameEnabled">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_Canal">
+            <property name="text">
+             <string>Canal:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="qMRMLNodeComboBox" name="outputCanalSelector">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string>Store spinal canal segmentation.</string>
+            </property>
+            <property name="nodeTypes">
+             <stringlist notr="true">
+              <string>vtkMRMLScalarVolumeNode</string>
+             </stringlist>
+            </property>
+            <property name="baseName">
+             <string>TotalSpineSeg_canal</string>
+            </property>
+            <property name="noneEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="addEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="removeEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="renameEnabled">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_Levels">
+            <property name="text">
+             <string>Levels:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="qMRMLNodeComboBox" name="outputLevelsSelector">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string>Store vertebral levels segmentation.</string>
+            </property>
+            <property name="nodeTypes">
+             <stringlist notr="true">
+              <string>vtkMRMLSegmentationNode</string>
+             </stringlist>
+            </property>
+            <property name="baseName">
+             <string>TotalSpineSeg_levels</string>
+            </property>
+            <property name="noneEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="addEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="removeEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="renameEnabled">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="ctkCollapsibleButton" name="advancedCollapsibleButton">
+         <property name="text">
+          <string>Advanced</string>
+         </property>
+         <property name="collapsed">
+          <bool>true</bool>
+         </property>
+         <layout class="QFormLayout" name="formLayout_Advanced">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_CPU">
+            <property name="text">
+             <string>Force to use CPU:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QCheckBox" name="cpuCheckBox">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_Iso">
+            <property name="text">
+             <string>Isotropic output:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QCheckBox" name="isoCheckBox">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_Package">
+            <property name="text">
+             <string>TotalSpineSeg Python package:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QPushButton" name="packageUpgradeButton">
+            <property name="text">
+             <string>Force reinstall</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QPushButton" name="packageInfoUpdateButton">
+            <property name="text">
+             <string>Get TotalSpineSeg package information</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="ctkFittedTextBrowser" name="packageInfoTextBrowser">
+            <property name="collapsed">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="applyButton">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Apply</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_Predict">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="loadTab">
+      <attribute name="title">
+       <string>Load</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_Load">
+       <!-- Terminology Checkbox -->
+       <item row="0" column="0" colspan="5">
+        <widget class="QCheckBox" name="loadApplyTerminologyCheckBox">
+         <property name="text">
+          <string>Apply anatomical terminology</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <property name="toolTip">
+          <string>If checked, loaded segmentation files will be renamed to anatomical terms.</string>
+         </property>
+        </widget>
+       </item>
 
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="ctkCollapsibleButton" name="outputsCollapsibleButton">
-     <property name="text">
-      <string>Outputs</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>Main Segmentation:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="qMRMLNodeComboBox" name="outputSegmentationSelector">
-        <property name="toolTip">
-         <string>This will store the main segmentation result (Vertebrae, Discs, etc.).</string>
-        </property>
-        <property name="nodeTypes">
-         <stringlist notr="true">
-          <string>vtkMRMLSegmentationNode</string>
-         </stringlist>
-        </property>
-        <property name="baseName">
-         <string>TotalSpineSeg_step2</string>
-        </property>
-        <property name="showChildNodeTypes">
-         <bool>false</bool>
-        </property>
-        <property name="noneEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="addEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="addEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="editEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="renameEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="noneEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="noneDisplay">
-         <string>None (Do not load)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="qMRMLSegmentationShow3DButton" name="segmentationShow3DButton"/>
-      </item>
+       <!-- Step 2 -->
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_LoadStep2">
+         <property name="text">
+          <string>Step 2:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="qMRMLNodeComboBox" name="loadStep2Selector">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="nodeTypes">
+          <stringlist notr="true">
+           <string>vtkMRMLSegmentationNode</string>
+           <string>vtkMRMLScalarVolumeNode</string>
+          </stringlist>
+         </property>
+         <property name="noneEnabled">
+          <bool>true</bool>
+         </property>
+         <property name="addEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="removeEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="renameEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="editEnabled">
+           <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QToolButton" name="loadStep2FileButton">
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="toolTip">
+          <string>Load from file</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QToolButton" name="visibleStep2Button">
+         <property name="text">
+          <string>Eye</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4">
+        <widget class="QToolButton" name="show3DStep2Button">
+         <property name="text">
+          <string>3D</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
 
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_cord">
-        <property name="text">
-         <string>Spinal Cord:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="qMRMLNodeComboBox" name="outputCordSelector">
-        <property name="toolTip">
-         <string>Store spinal cord segmentation.</string>
-        </property>
-        <property name="nodeTypes">
-         <stringlist notr="true">
-          <string>vtkMRMLScalarVolumeNode</string>
-         </stringlist>
-        </property>
-        <property name="baseName">
-         <string>TotalSpineSeg_cord</string>
-        </property>
-        <property name="showChildNodeTypes">
-         <bool>false</bool>
-        </property>
-        <property name="noneEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="addEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="editEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="renameEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="noneDisplay">
-         <string>None (Do not load)</string>
-        </property>
-       </widget>
-      </item>
+       <!-- Step 1 -->
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_LoadStep1">
+         <property name="text">
+          <string>Step 1:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="qMRMLNodeComboBox" name="loadStep1Selector">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="nodeTypes">
+          <stringlist notr="true">
+           <string>vtkMRMLSegmentationNode</string>
+           <string>vtkMRMLScalarVolumeNode</string>
+          </stringlist>
+         </property>
+         <property name="noneEnabled">
+          <bool>true</bool>
+         </property>
+         <property name="addEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="removeEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="renameEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="editEnabled">
+           <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QToolButton" name="loadStep1FileButton">
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="toolTip">
+          <string>Load from file</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QToolButton" name="visibleStep1Button">
+         <property name="text">
+          <string>Eye</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="4">
+        <widget class="QToolButton" name="show3DStep1Button">
+         <property name="text">
+          <string>3D</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
 
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_canal">
-        <property name="text">
-         <string>Spinal Canal:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="qMRMLNodeComboBox" name="outputCanalSelector">
-        <property name="toolTip">
-         <string>Store spinal canal segmentation.</string>
-        </property>
-        <property name="nodeTypes">
-         <stringlist notr="true">
-          <string>vtkMRMLScalarVolumeNode</string>
-         </stringlist>
-        </property>
-        <property name="baseName">
-         <string>TotalSpineSeg_canal</string>
-        </property>
-        <property name="showChildNodeTypes">
-         <bool>false</bool>
-        </property>
-        <property name="noneEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="addEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="editEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="renameEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="noneDisplay">
-         <string>None (Do not load)</string>
-        </property>
-       </widget>
-      </item>
+       <!-- Levels -->
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_LoadLevels">
+         <property name="text">
+          <string>Levels:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="qMRMLNodeComboBox" name="loadLevelsSelector">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="nodeTypes">
+          <stringlist notr="true">
+           <string>vtkMRMLSegmentationNode</string>
+           <string>vtkMRMLScalarVolumeNode</string>
+          </stringlist>
+         </property>
+         <property name="noneEnabled">
+          <bool>true</bool>
+         </property>
+         <property name="addEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="removeEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="renameEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="editEnabled">
+           <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QToolButton" name="loadLevelsFileButton">
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="toolTip">
+          <string>Load from file</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <widget class="QToolButton" name="visibleLevelsButton">
+         <property name="text">
+          <string>Eye</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="4">
+        <widget class="QToolButton" name="show3DLevelsButton">
+         <property name="text">
+          <string>3D</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
 
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_levels">
-        <property name="text">
-         <string>Levels:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="qMRMLNodeComboBox" name="outputLevelsSelector">
-        <property name="toolTip">
-         <string>Store vertebral levels segmentation.</string>
-        </property>
-        <property name="nodeTypes">
-         <stringlist notr="true">
-          <string>vtkMRMLSegmentationNode</string>
-         </stringlist>
-        </property>
-        <property name="baseName">
-         <string>TotalSpineSeg_levels</string>
-        </property>
-        <property name="showChildNodeTypes">
-         <bool>false</bool>
-        </property>
-        <property name="noneEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="addEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="editEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="renameEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="noneDisplay">
-         <string>None (Do not load)</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="applyButton">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="toolTip">
-      <string>Start segmentation.</string>
-     </property>
-     <property name="text">
-      <string>Apply</string>
-     </property>
-     <property name="default">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="ctkCollapsibleButton" name="advancedCollapsibleButton">
-     <property name="text">
-      <string>Advanced</string>
-     </property>
-     <property name="collapsed">
-      <bool>true</bool>
-     </property>
-     <layout class="QFormLayout" name="formLayout_3">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Use standard segment names:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QCheckBox" name="useStandardSegmentNamesCheckBox">
-        <property name="toolTip">
-         <string>If enabled, segment names will use standard terminology (e.g. "vertebrae_L1").</string>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Force to use CPU: </string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QCheckBox" name="cpuCheckBox">
-        <property name="toolTip">
-         <string>Use CPU, even if GPU is available. Useful if the GPU does not have enough memory.</string>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_iso">
-        <property name="text">
-         <string>Isotropic output:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QCheckBox" name="isoCheckBox">
-        <property name="toolTip">
-         <string>If enabled, model outputs will be isotropic (1mm) instead of maintaining input resolution.</string>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_loc">
-        <property name="text">
-         <string>Localizer volume (step 1 output):</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="qMRMLNodeComboBox" name="localizerVolumeSelector">
-        <property name="toolTip">
-         <string>Optional: Select a pre-computed localizer volume (Step 1 output) to guide segmentation.</string>
-        </property>
-        <property name="nodeTypes">
-         <stringlist>
-          <string>vtkMRMLLabelMapVolumeNode</string>
-          <string>vtkMRMLSegmentationNode</string>
-         </stringlist>
-        </property>
-        <property name="selectNodeUponCreation">
-         <bool>false</bool>
-        </property>
-        <property name="addEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="removeEnabled">
-         <bool>false</bool>
-        </property>
-        <property name="noneEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="showHidden">
-         <bool>false</bool>
-        </property>
-        <property name="showChildNodeTypes">
-         <bool>false</bool>
-        </property>
-        <property name="baseName">
-         <string>Localizer</string>
-        </property>
-        <property name="noneDisplay">
-         <string>None</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>TotalSpineSeg Python package:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QPushButton" name="packageUpgradeButton">
-        <property name="toolTip">
-         <string>Force upgrade of TotalSpineSeg Python package to the version required by this module.</string>
-        </property>
-        <property name="text">
-         <string>Force reinstall</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0" colspan="2">
-       <widget class="QPushButton" name="packageInfoUpdateButton">
-        <property name="toolTip">
-         <string>Get metadata information for the TotalSpineSeg package currently installed</string>
-        </property>
-        <property name="text">
-         <string>Get TotalSpineSeg package information</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0" colspan="2">
-       <widget class="ctkFittedTextBrowser" name="packageInfoTextBrowser">
-        <property name="collapsed">
-         <bool>false</bool>
-        </property>
-        <property name="showDetailsText">
-         <string/>
-        </property>
-        <property name="hideDetailsText">
-         <string/>
-        </property>
-       </widget>
-      </item>
-     </layout>
+       <!-- Cord -->
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_LoadCord">
+         <property name="text">
+          <string>Cord:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="qMRMLNodeComboBox" name="loadCordSelector">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="nodeTypes">
+          <stringlist notr="true">
+           <string>vtkMRMLScalarVolumeNode</string>
+           <string>vtkMRMLSegmentationNode</string>
+          </stringlist>
+         </property>
+         <property name="noneEnabled">
+          <bool>true</bool>
+         </property>
+         <property name="addEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="removeEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="renameEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="editEnabled">
+           <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2">
+        <widget class="QToolButton" name="loadCordFileButton">
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="toolTip">
+          <string>Load from file</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="3">
+        <widget class="QToolButton" name="visibleCordButton">
+         <property name="text">
+          <string>Eye</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="4">
+        <widget class="QToolButton" name="show3DCordButton">
+         <property name="text">
+          <string>3D</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+
+       <!-- Canal -->
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_LoadCanal">
+         <property name="text">
+          <string>Canal:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="qMRMLNodeComboBox" name="loadCanalSelector">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="nodeTypes">
+          <stringlist notr="true">
+           <string>vtkMRMLScalarVolumeNode</string>
+           <string>vtkMRMLSegmentationNode</string>
+          </stringlist>
+         </property>
+         <property name="noneEnabled">
+          <bool>true</bool>
+         </property>
+         <property name="addEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="removeEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="renameEnabled">
+           <bool>false</bool>
+         </property>
+         <property name="editEnabled">
+           <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="2">
+        <widget class="QToolButton" name="loadCanalFileButton">
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="toolTip">
+          <string>Load from file</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="3">
+        <widget class="QToolButton" name="visibleCanalButton">
+         <property name="text">
+          <string>Eye</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="4">
+        <widget class="QToolButton" name="show3DCanalButton">
+         <property name="text">
+          <string>3D</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       
+       <item row="6" column="0">
+        <spacer name="verticalSpacer_Load">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>
@@ -433,23 +845,7 @@
      <property name="readOnly">
       <bool>true</bool>
      </property>
-     <property name="textInteractionFlags">
-      <set>Qt::TextSelectableByMouse</set>
-     </property>
     </widget>
-   </item>
-   <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
    </item>
   </layout>
  </widget>
@@ -466,11 +862,6 @@
    <header>ctkFittedTextBrowser.h</header>
   </customwidget>
   <customwidget>
-   <class>ctkMenuButton</class>
-   <extends>QPushButton</extends>
-   <header>ctkMenuButton.h</header>
-  </customwidget>
-  <customwidget>
    <class>qMRMLNodeComboBox</class>
    <extends>QWidget</extends>
    <header>qMRMLNodeComboBox.h</header>
@@ -481,11 +872,6 @@
    <header>qMRMLWidget.h</header>
    <container>1</container>
   </customwidget>
-  <customwidget>
-   <class>qMRMLSegmentationShow3DButton</class>
-   <extends>ctkMenuButton</extends>
-   <header>qMRMLSegmentationShow3DButton.h</header>
-  </customwidget>
  </customwidgets>
  <resources/>
  <connections>
@@ -494,32 +880,66 @@
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
    <receiver>inputVolumeSelector</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>122</x>
-     <y>132</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>260</x>
-     <y>60</y>
-    </hint>
-   </hints>
   </connection>
   <connection>
    <sender>TotalSpineSeg</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
-   <receiver>outputSegmentationSelector</receiver>
+   <receiver>outputStep1Selector</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>161</x>
-     <y>8</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>260</x>
-     <y>175</y>
-    </hint>
-   </hints>
+  </connection>
+  <connection>
+   <sender>TotalSpineSeg</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>outputStep2Selector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+  </connection>
+  <connection>
+   <sender>TotalSpineSeg</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>outputCordSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+  </connection>
+  <connection>
+   <sender>TotalSpineSeg</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>outputCanalSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+  </connection>
+  <connection>
+   <sender>TotalSpineSeg</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>outputLevelsSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+  </connection>
+  <connection>
+   <sender>TotalSpineSeg</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>loadStep2Selector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+  </connection>
+  <connection>
+   <sender>TotalSpineSeg</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>loadStep1Selector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+  </connection>
+  <connection>
+   <sender>TotalSpineSeg</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>loadLevelsSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+  </connection>
+  <connection>
+   <sender>TotalSpineSeg</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>loadCordSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+  </connection>
+  <connection>
+   <sender>TotalSpineSeg</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>loadCanalSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
   </connection>
  </connections>
 </ui>
