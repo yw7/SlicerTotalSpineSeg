@@ -6,8 +6,16 @@
 
 ## Acknowledgement
 
-This extension is based on the [TotalSpineSeg](https://github.com/neuropoly/totalspineseg) tool developed by NeuroPoly.
+This extension is based on the [TotalSpineSeg](https://github.com/neuropoly/totalspineseg) tool.
 It is adapted from the [SlicerTotalSegmentator](https://github.com/lassoan/SlicerTotalSegmentator) extension.
+
+If you use this extension in your research, please cite the following papers:
+
+**TotalSpineSeg:**
+> Warszawer, Y., Molinier, N., Valosek, J., Benveniste, P. L., Bédard, S., Shirbint, E., ... & Cohen-Adad, J. (2025). TotalSpineSeg: Robust Spine Segmentation with Landmark-Based Labeling in MRI. ResearchGate preprint. DOI: [10.13140/RG.2.2.31318.56649](https://doi.org/10.13140/RG.2.2.31318.56649)
+
+**nnU-Net:**
+> Isensee, F., Jaeger, P. F., Kohl, S. A., Petersen, J., & Maier-Hein, K. H. (2021). nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation. Nature methods, 18(2), 203-211. DOI: [10.1038/s41592-020-01008-z](https://doi.org/10.1038/s41592-020-01008-z)
 
 ## Setup
 
@@ -29,10 +37,14 @@ It is adapted from the [SlicerTotalSegmentator](https://github.com/lassoan/Slice
 1. Open 3D Slicer.
 2. Load a spine MRI or CT volume (`.nii`, `.nii.gz`, or DICOM).
 3. Switch to the **TotalSpineSeg** module (under Segmentation).
-4. **Inputs**:
+4. **Installation (First Run)**:
+    - If required Python packages are missing, you will see an **Install Dependencies** button instead of the main interface.
+    - Click it to install the necessary dependencies (TotalSpineSeg, nnU-Net, PyTorch, etc.).
+    - Once installation is complete, the main interface will appear.
+5. **Inputs**:
     - Select the **Input Volume**.
     - (Optional) Select a **Localizer** segmentation (Step 1 or Step 2 output). This is the output of the model on a localizer image, used to ensure accurate instance segmentation on short FOV scans that do not contain C1 or Sacrum.
-5. **Outputs**:
+6. **Outputs**:
     - Select or create output nodes for the desired segmentations:
         - **Step 2**: Segmentation of canal, cord, and instance segmentation of vertebrae and discs.
         - **Step 1**: Segmentation of canal, cord, vertebrae (binary), and instance segmentation of discs.
@@ -41,8 +53,8 @@ It is adapted from the [SlicerTotalSegmentator](https://github.com/lassoan/Slice
         - **Levels**: Single-voxel vertebral levels at the posterior tip of each disc (similar to SCT).
     - **Apply anatomical terminology**: Check this to rename segments to standard anatomical names (e.g., "vertebrae_C1").
     - **Isotropic output**: Check this to keep the output at 1mm³ resolution (as used by the model) instead of resampling back to input space.
-6. Click **Apply**.
-   - On the first run, the module will download the necessary Python packages and model weights. This may take several minutes.
+7. Click **Apply**.
+   - On the first run, the module will download the model weights. This may take several minutes.
    - Subsequent runs will be faster.
 
 ## Loading & Visualization
