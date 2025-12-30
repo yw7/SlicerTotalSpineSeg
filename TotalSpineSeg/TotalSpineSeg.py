@@ -293,18 +293,30 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if not self.ui.outputStep1Selector.currentNode():
             self.ui.outputStep1Selector.addNode()
         
+        # 1. Check and install Slicer Extensions (requires restart if installed)
         try:
             slicer.app.setOverrideCursor(qt.Qt.WaitCursor)
-            self.logic.setupPythonRequirements()
+            self.logic.setupExtensions()
             slicer.app.restoreOverrideCursor()
         except Exception as e:
             slicer.app.restoreOverrideCursor()
             import traceback
             traceback.print_exc()
-            self.ui.statusLabel.appendPlainText(_("Failed to install Python dependencies:\\n{exception}\\n").format(exception=e))
+            self.ui.statusLabel.appendPlainText(_("Failed to check extensions:\\n{exception}\\n").format(exception=e))
             return
 
         self.ui.applyButton.enabled = False
+        self.ui.statusLabel.appendPlainText(_("Checking and installing Python packages..."))
+
+        # 2. Install Python packages in background thread, then run processing
+        self.logic.installPackagesAsync(self.onPackagesInstalled)
+
+    def onPackagesInstalled(self, success):
+        if not success:
+            self.ui.applyButton.enabled = True
+            self.ui.statusLabel.appendPlainText(_("Failed to install Python packages."))
+            return
+
         self.ui.statusLabel.appendPlainText(_("Processing started..."))
         
         try:
@@ -427,7 +439,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             slicer.util.restart()
 
     def addLog(self, text):
-        self.ui.statusLabel.appendPlainText(text)
+        slicer.app.asyncInvokeLater(lambda: self.ui.statusLabel.appendPlainText(text))
         slicer.app.processEvents()
 
 class InstallError(Exception):
@@ -475,7 +487,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             versionInfo += "Download URL: " + downloadUrl
         return versionInfo
 
-    def setupPythonRequirements(self, upgrade=False):
+    def setupExtensions(self):
         import importlib.metadata
         import packaging
         import importlib
@@ -519,6 +531,20 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
                 else:
                     raise InstallError(_("Restart required to complete extension installation."))
 
+    def installPackagesAsync(self, callback):
+        import threading
+        def thread_target():
+            try:
+                self.installPackages()
+                slicer.app.asyncInvokeLater(lambda: callback(True))
+            except Exception as e:
+                self.log(f"Error installing packages: {e}")
+                slicer.app.asyncInvokeLater(lambda: callback(False))
+        
+        thread = threading.Thread(target=thread_target)
+        thread.start()
+
+    def installPackages(self, upgrade=False):
         try:
             import pandas
         except ModuleNotFoundError:
@@ -552,13 +578,8 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         if not nnunetlogic.isPackageInstalled(Requirement("nnunetv2")):
             confirmPackagesToInstall.append("nnunetv2")
 
-        if confirmPackagesToInstall:
-            if not slicer.util.confirmOkCancelDisplay(
-                _("This module requires installation of additional Python packages. Installation needs network connection and may take several minutes. Click OK to proceed."),
-                _("Confirm Python package installation"),
-                detailedText=_("Python packages that will be installed: {package_list}").format(package_list=', '.join(confirmPackagesToInstall))
-                ):
-                raise InstallError("User cancelled.")
+        # Note: We skip the confirmation dialog here to allow background installation.
+        # The user has already clicked Apply, implying consent to run the tool.
 
         if "PyTorch" in confirmPackagesToInstall:
             self.log(_('PyTorch Python package is required. Installing... (it may take several minutes)'))
@@ -590,6 +611,11 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             self.log(_('TotalSpineSeg is required. Installing... (it may take several minutes)'))
             slicer.util.pip_install("totalspineseg[nnunetv2] --upgrade" if upgrade else "totalspineseg[nnunetv2]")
             self.log(_('TotalSpineSeg installation completed successfully.'))
+
+    def setupPythonRequirements(self, upgrade=False):
+        # Backward compatibility for tests
+        self.setupExtensions()
+        self.installPackages(upgrade)
 
     def logProcessOutput(self, proc):
         output = ""
