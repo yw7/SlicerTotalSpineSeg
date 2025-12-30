@@ -12,10 +12,10 @@ It is adapted from the [SlicerTotalSegmentator](https://github.com/lassoan/Slice
 If you use this extension in your research, please cite the following papers:
 
 **TotalSpineSeg:**
-> Warszawer, Y., Molinier, N., Valosek, J., Benveniste, P. L., Bédard, S., Shirbint, E., ... & Cohen-Adad, J. (2025). TotalSpineSeg: Robust Spine Segmentation with Landmark-Based Labeling in MRI. ResearchGate preprint. DOI: [10.13140/RG.2.2.31318.56649](https://doi.org/10.13140/RG.2.2.31318.56649)
+> Warszawer, Yehuda & Molinier, Nathan & Valosek, Jan & Benveniste, Pierre-Louis & Bédard, Sandrine & Shirbint, Emanuel & Mohamed, Feroze & Tsagkas, Charidimos & Kolind, Shannon & Lynd, Larry & Oh, Jiwon & Prat, Alexandre & Tam, Roger & Traboulsee, Anthony & Patten, Scott & Lee, Lisa Eunyoung & Achiron, Anat & Cohen-Adad, Julien. (2025). TotalSpineSeg: Robust Spine Segmentation with Landmark-Based Labeling in MRI. [10.13140/RG.2.2.31318.56649](https://doi.org/10.13140/RG.2.2.31318.56649).
 
 **nnU-Net:**
-> Isensee, F., Jaeger, P. F., Kohl, S. A., Petersen, J., & Maier-Hein, K. H. (2021). nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation. Nature methods, 18(2), 203-211. DOI: [10.1038/s41592-020-01008-z](https://doi.org/10.1038/s41592-020-01008-z)
+> Isensee, F., Jaeger, P.F., Kohl, S.A.A. et al. nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation. Nat Methods 18, 203–211 (2021). [https://doi.org/10.1038/s41592-020-01008-z](https://doi.org/10.1038/s41592-020-01008-z)
 
 ## Setup
 
