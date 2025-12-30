@@ -478,6 +478,47 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
     def setupPythonRequirements(self, upgrade=False):
         import importlib.metadata
         import packaging
+        import importlib
+
+        # Define required extensions: ModuleName -> ExtensionName
+        requiredExtensions = {
+            "PyTorchUtils": "PyTorch",
+            "SlicerNNUNetLib": "NNUNet" 
+        }
+        
+        # Check what's missing
+        missingExtensions = []
+        em = slicer.app.extensionsManagerModel()
+
+        for module, ext in requiredExtensions.items():
+            try:
+                importlib.import_module(module)
+            except ModuleNotFoundError:
+                # Module missing. Check if extension is installed.
+                if not em.isExtensionInstalled(ext):
+                    missingExtensions.append(ext)
+
+        if missingExtensions:
+            # Attempt to install missing extensions
+            for ext in missingExtensions:
+                em.installExtensionFromServer(ext)
+            
+            # Check if restart is actually needed by trying to import again
+            importlib.invalidate_caches()
+            restartNeeded = False
+            for module in requiredExtensions.keys():
+                try:
+                    importlib.import_module(module)
+                except ModuleNotFoundError:
+                    restartNeeded = True
+                    break
+
+            if restartNeeded:
+                if slicer.util.confirmOkCancelDisplay(_("Required extensions installed. Slicer needs to be restarted. Restart now?")):
+                    slicer.util.restart()
+                else:
+                    raise InstallError(_("Restart required to complete extension installation."))
+
         try:
             import pandas
         except ModuleNotFoundError:
@@ -488,10 +529,11 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             slicer.util.pip_install("dicom2nifti<=2.5.1")
 
         confirmPackagesToInstall = []
+        
         try:
-          import PyTorchUtils
+            import PyTorchUtils
         except ModuleNotFoundError:
-          raise InstallError("This module requires PyTorch extension. Install it from the Extensions Manager.")
+             raise InstallError(_("PyTorch extension is required. Please install 'PyTorch' from Extensions Manager and restart Slicer."))
 
         minimumTorchVersion = "2.0.0"
         torchLogic = PyTorchUtils.PyTorchUtilsLogic()
@@ -501,7 +543,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         try:
             import SlicerNNUNetLib
         except ModuleNotFoundError:
-            raise InstallError("This module requires SlicerNNUNet extension. Install it from the Extensions Manager.")
+             raise InstallError(_("SlicerNNUNet extension is required. Please install 'SlicerNNUNet' from Extensions Manager and restart Slicer."))
 
         minimumNNUNetVersion = "2.2.1"
         nnunetlogic = SlicerNNUNetLib.InstallLogic(doAskConfirmation=False)
