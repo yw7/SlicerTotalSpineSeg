@@ -36,6 +36,10 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self._parameterNode = None
         self._updatingGUIFromParameterNode = False
 
+        self.installAnimationTimer = qt.QTimer()
+        self.installAnimationTimer.setInterval(500)
+        self.installAnimationTimer.connect('timeout()', self.onInstallAnimationTimer)
+
     def setup(self):
         ScriptedLoadableModuleWidget.setup(self)
         uiWidget = slicer.util.loadUI(self.resourcePath('UI/TotalSpineSeg.ui'))
@@ -148,6 +152,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def cleanup(self):
         self.removeObservers()
+        self.installAnimationTimer.stop()
 
     def enter(self):
         self.initializeParameterNode()
@@ -287,6 +292,19 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if volNode:
                 selector.setCurrentNode(volNode)
 
+    def onInstallAnimationTimer(self):
+        cursor = self.ui.statusLabel.textCursor()
+        cursor.movePosition(qt.QTextCursor.End)
+        cursor.select(qt.QTextCursor.BlockUnderCursor)
+        text = cursor.selectedText()
+        if text.endswith(".........."):
+             cursor.removeSelectedText()
+             cursor.insertText(text.rstrip("."))
+        else:
+             self.ui.statusLabel.moveCursor(qt.QTextCursor.End)
+             self.ui.statusLabel.insertPlainText(".")
+             self.ui.statusLabel.ensureCursorVisible()
+
     def onApplyButton(self):
         self.ui.statusLabel.plainText = ''
         
@@ -309,9 +327,11 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.statusLabel.appendPlainText(_("Checking and installing Python packages..."))
 
         # 2. Install Python packages in background thread, then run processing
+        self.installAnimationTimer.start()
         self.logic.installPackagesAsync(self.onPackagesInstalled)
 
     def onPackagesInstalled(self, success):
+        self.installAnimationTimer.stop()
         if not success:
             self.ui.applyButton.enabled = True
             self.ui.statusLabel.appendPlainText(_("Failed to install Python packages."))
@@ -439,7 +459,11 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             slicer.util.restart()
 
     def addLog(self, text):
-        slicer.app.asyncInvokeLater(lambda: self.ui.statusLabel.appendPlainText(text))
+        qt.QTimer.singleShot(0, lambda: self._appendLog(text))
+
+    def _appendLog(self, text):
+        self.ui.statusLabel.appendPlainText(text)
+        self.ui.statusLabel.ensureCursorVisible()
         slicer.app.processEvents()
 
 class InstallError(Exception):
@@ -532,57 +556,54 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
                     raise InstallError(_("Restart required to complete extension installation."))
 
     def installPackagesAsync(self, callback):
-        import threading
-        def thread_target():
-            try:
-                self.installPackages()
-                slicer.app.asyncInvokeLater(lambda: callback(True))
-            except Exception as e:
-                self.log(f"Error installing packages: {e}")
-                slicer.app.asyncInvokeLater(lambda: callback(False))
-        
-        thread = threading.Thread(target=thread_target)
-        thread.start()
+        # Running installation in a background thread causes deadlocks with Slicer's API.
+        # We must run it in the main thread. The UI will freeze during installation, which is expected.
+        qt.QTimer.singleShot(0, lambda: self._runInstallPackagesSync(callback))
+
+    def _runInstallPackagesSync(self, callback):
+        try:
+            # Force UI update before starting
+            slicer.app.processEvents()
+            self.installPackages()
+            callback(True)
+        except Exception as e:
+            self.log(f"Error installing packages: {e}")
+            callback(False)
 
     def installPackages(self, upgrade=False):
+        import PyTorchUtils
+        import SlicerNNUNetLib
+        
+        torchLogic = PyTorchUtils.PyTorchUtilsLogic()
+        nnunetlogic = SlicerNNUNetLib.InstallLogic(doAskConfirmation=False)
+
         try:
             import pandas
         except ModuleNotFoundError:
+            self.log(_('Installing pandas...'))
             slicer.util.pip_install("pandas")
         try:
             import dicom2nifti
         except ModuleNotFoundError:
+            self.log(_('Installing dicom2nifti...'))
             slicer.util.pip_install("dicom2nifti<=2.5.1")
 
         confirmPackagesToInstall = []
         
-        try:
-            import PyTorchUtils
-        except ModuleNotFoundError:
-             raise InstallError(_("PyTorch extension is required. Please install 'PyTorch' from Extensions Manager and restart Slicer."))
-
         minimumTorchVersion = "2.0.0"
-        torchLogic = PyTorchUtils.PyTorchUtilsLogic()
         if not torchLogic.torchInstalled():
             confirmPackagesToInstall.append("PyTorch")
 
-        try:
-            import SlicerNNUNetLib
-        except ModuleNotFoundError:
-             raise InstallError(_("SlicerNNUNet extension is required. Please install 'SlicerNNUNet' from Extensions Manager and restart Slicer."))
-
         minimumNNUNetVersion = "2.2.1"
-        nnunetlogic = SlicerNNUNetLib.InstallLogic(doAskConfirmation=False)
         nnunetlogic.getInstalledNNUnetVersion()
         from packaging.requirements import Requirement
         if not nnunetlogic.isPackageInstalled(Requirement("nnunetv2")):
             confirmPackagesToInstall.append("nnunetv2")
 
-        # Note: We skip the confirmation dialog here to allow background installation.
-        # The user has already clicked Apply, implying consent to run the tool.
-
         if "PyTorch" in confirmPackagesToInstall:
-            self.log(_('PyTorch Python package is required. Installing... (it may take several minutes)'))
+            self.log(_('PyTorch Python package is required. Installing... (Slicer will become unresponsive)'))
+            # Force UI update
+            slicer.app.processEvents()
             torch = torchLogic.installTorch(askConfirmation=False, torchVersionRequirement = f">={minimumTorchVersion}")
             if torch is None:
                 raise InstallError("This module requires PyTorch extension. Install it from the Extensions Manager.")
@@ -592,7 +613,8 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
                 raise InstallError(f'PyTorch version {torchLogic.torch.__version__} is not compatible with this module.')
 
         if "nnunetv2" in confirmPackagesToInstall:
-            self.log(_('nnunetv2 package is required. Installing... (it may take several minutes)'))
+            self.log(_('nnunetv2 package is required. Installing... (Slicer will become unresponsive)'))
+            slicer.app.processEvents()
             nnunet = nnunetlogic.setupPythonRequirements(f"nnunetv2>={minimumNNUNetVersion}")
             if not nnunet:
                 raise InstallError("This module requires SlicerNNUNet extension. Install it from the Extensions Manager.")
@@ -608,7 +630,8 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             needToInstall = True
 
         if needToInstall or upgrade:
-            self.log(_('TotalSpineSeg is required. Installing... (it may take several minutes)'))
+            self.log(_('TotalSpineSeg is required. Installing... (Slicer will become unresponsive)'))
+            slicer.app.processEvents()
             slicer.util.pip_install("totalspineseg[nnunetv2] --upgrade" if upgrade else "totalspineseg[nnunetv2]")
             self.log(_('TotalSpineSeg installation completed successfully.'))
 
