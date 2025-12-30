@@ -18,7 +18,7 @@
      </property>
      <widget class="QWidget" name="predictTab">
       <attribute name="title">
-       <string>Predict</string>
+       <string>Segment</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_Predict">
        <item>
@@ -467,7 +467,7 @@
      </widget>
      <widget class="QWidget" name="loadTab">
       <attribute name="title">
-       <string>Load</string>
+       <string>View</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_Load">
        <!-- Terminology Checkbox -->
