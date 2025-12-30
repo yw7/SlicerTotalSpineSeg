@@ -45,6 +45,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         self.logic = TotalSpineSegLogic()
         self.logic.logCallback = self.addLog
+        self.logic.processingFinishedCallback = self.onProcessingFinished
 
         # Setup Icons
         # Use text for now as specific icons are not in the resource folder
@@ -309,7 +310,10 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.statusLabel.appendPlainText(_("Failed to install Python dependencies:\\n{exception}\\n").format(exception=e))
             return
 
-        with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
+        self.ui.applyButton.enabled = False
+        self.ui.statusLabel.appendPlainText(_("Processing started..."))
+        
+        try:
             self.logic.process(
                 inputVolume=self.ui.inputVolumeSelector.currentNode(),
                 outputStep1=self.ui.outputStep1Selector.currentNode(),
@@ -320,12 +324,23 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 cpu=self.ui.cpuCheckBox.checked,
                 iso=self.ui.isoCheckBox.checked,
                 useStandardNames=self.ui.applyTerminologyCheckBox.checked,
-                inputLocalizer=self.ui.inputLocalizerSelector.currentNode()
+                inputLocalizer=self.ui.inputLocalizerSelector.currentNode(),
+                waitForCompletion=False
             )
-        
-        self.ui.loadApplyTerminologyCheckBox.checked = self.ui.applyTerminologyCheckBox.checked
-        self.ui.statusLabel.appendPlainText("\\n" + _("Processing finished."))
-        self.ui.tabWidget.setCurrentIndex(1)
+        except Exception as e:
+            self.ui.applyButton.enabled = True
+            self.ui.statusLabel.appendPlainText(_("Processing failed: {exception}").format(exception=e))
+            import traceback
+            traceback.print_exc()
+
+    def onProcessingFinished(self, success):
+        self.ui.applyButton.enabled = True
+        if success:
+            self.ui.loadApplyTerminologyCheckBox.checked = self.ui.applyTerminologyCheckBox.checked
+            self.ui.statusLabel.appendPlainText("\\n" + _("Processing finished."))
+            self.ui.tabWidget.setCurrentIndex(1)
+        else:
+            self.ui.statusLabel.appendPlainText("\\n" + _("Processing failed."))
 
     def onLoadCordChanged(self, node):
         if node:
@@ -434,6 +449,8 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         self.logCallback = None
         self.clearOutputFolder = True
         self.totalSpineSegPythonPackageDownloadUrl = "https://github.com/neuropoly/totalspineseg/archive/master.zip"
+        self.processRunner = None
+        self.processingFinishedCallback = None
 
     def log(self, text):
         logging.info(text)
@@ -553,7 +570,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         if proc.returncode != 0:
             raise CalledProcessError(proc.returncode, proc.args, output=proc.stdout, stderr=proc.stderr)
 
-    def process(self, inputVolume, outputStep1, outputStep2=None, outputCord=None, outputCanal=None, outputLevels=None, cpu=False, iso=False, useStandardNames=True, inputLocalizer=None):
+    def process(self, inputVolume, outputStep1, outputStep2=None, outputCord=None, outputCanal=None, outputLevels=None, cpu=False, iso=False, useStandardNames=True, inputLocalizer=None, waitForCompletion=False):
         if not inputVolume:
             raise ValueError("Input volume is invalid")
 
@@ -724,8 +741,42 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         self.log(_('Running TotalSpineSeg AI...'))
         self.log(f"Command: {cmd}")
 
-        proc = slicer.util.launchConsoleProcess(cmd)
-        self.logProcessOutput(proc)
+        if waitForCompletion:
+            proc = slicer.util.launchConsoleProcess(cmd)
+            self.logProcessOutput(proc)
+            self.onProcessFinished(0, outputStep1, outputStep2, outputCord, outputCanal, outputLevels, useStandardNames, tempFolder, startTime, outputFolder)
+        else:
+            self.processRunner = qt.QProcess()
+            env = qt.QProcessEnvironment.systemEnvironment()
+            startupEnv = slicer.util.startupEnvironment()
+            for key, value in startupEnv.items():
+                env.insert(key, value)
+            self.processRunner.setProcessEnvironment(env)
+            
+            self.processRunner.connect('readyReadStandardOutput()', self.onProcessOutput)
+            self.processRunner.connect('readyReadStandardError()', self.onProcessOutput)
+            self.processRunner.connect('finished(int, QProcess::ExitStatus)', lambda exitCode, exitStatus: self.onProcessFinished(
+                exitCode, outputStep1, outputStep2, outputCord, outputCanal, outputLevels, useStandardNames, tempFolder, startTime, outputFolder))
+            
+            self.processRunner.start(cmd[0], cmd[1:])
+
+    def onProcessOutput(self):
+        if not self.processRunner:
+            return
+        self.processRunner.setReadChannel(qt.QProcess.StandardOutput)
+        while self.processRunner.canReadLine():
+            self.log(self.processRunner.readLine().data().decode('utf-8').rstrip())
+        self.processRunner.setReadChannel(qt.QProcess.StandardError)
+        while self.processRunner.canReadLine():
+            self.log(self.processRunner.readLine().data().decode('utf-8').rstrip())
+
+    def onProcessFinished(self, exitCode, outputStep1, outputStep2, outputCord, outputCanal, outputLevels, useStandardNames, tempFolder, startTime, outputFolder):
+        import time
+        if exitCode != 0:
+            self.log("Process failed with exit code " + str(exitCode))
+            if self.processingFinishedCallback:
+                self.processingFinishedCallback(False)
+            return
 
         self.log(_('Importing results...'))
 
@@ -747,10 +798,14 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             self.importResult(outputLevels, os.path.join(outputFolder, "step1_levels"), "TotalSpineSeg_Levels")
 
         if self.clearOutputFolder:
+            import shutil
             shutil.rmtree(tempFolder)
             
         stopTime = time.time()
         self.log(_("Processing completed in {time:.2f}s").format(time=stopTime-startTime))
+        
+        if self.processingFinishedCallback:
+            self.processingFinishedCallback(True)
 
     def importResult(self, node, folder, prefix, isSoft=False, applyTerm=False, colorNodeID=None, renameSacrum=False):
         import glob
@@ -891,7 +946,7 @@ class TotalSpineSegTest(ScriptedLoadableModuleTest):
         if testLogic:
             logic = TotalSpineSegLogic()
             logic.setupPythonRequirements()
-            logic.process(inputVolume, outputStep1)
+            logic.process(inputVolume, outputStep1, waitForCompletion=True)
         else:
             logging.warning("test_TotalSpineSeg1 logic testing was skipped.")
         self.delayDisplay('Test passed')
