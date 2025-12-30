@@ -48,13 +48,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.logic.processingFinishedCallback = self.onProcessingFinished
 
         # Setup Icons
-        # Use text for now as specific icons are not in the resource folder
-        # eyeIcon = qt.QIcon(":/Icons/VisibleOn.png") 
-        # threeDIcon = qt.QIcon(":/Icons/MakeModel.png")
-
-        # Try to load standard icons from Slicer resources
-        # Note: These paths are standard in Slicer but might vary.
-        # If they fail, we fallback to text.
+        # Try to load standard icons from Slicer resources. If they fail, fallback to text.
         self.eyeIcon = qt.QIcon(":/Icons/VisibleOn.png")
         self.eyeOffIcon = qt.QIcon(":/Icons/VisibleOff.png")
         threeDIcon = qt.QIcon(":/Icons/MakeModel.png")
@@ -596,51 +590,23 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             inputLocalizerFile = os.path.join(tempFolder, "localizer.nii.gz")
             self.log(_("Writing localizer file to {localizer_file}").format(localizer_file=inputLocalizerFile))
             
-            # Export segmentation to labelmap with correct pixel values
             mapping = self.getTerminologyMapping()
             reverseMapping = {v: k for k, v in mapping.items()}
             
             segmentationNode = inputLocalizer
             segmentation = segmentationNode.GetSegmentation()
             
-            # Create a temporary labelmap node
             labelmapNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLabelMapVolumeNode")
-            
-            # We need to manually construct the labelmap because ExportSegmentsToLabelmapNode 
-            # doesn't easily allow specifying arbitrary pixel values for segments by name.
-            # However, we can use a trick: create a temporary segmentation, rename segments to their IDs, 
-            # and then export? No, Slicer generates IDs.
-            
-            # Better approach: Use the segment IDs if they match, or iterate and paint.
-            # Most robust: Create a blank labelmap with same geometry, then iterate segments and add them.
-            
-            # 1. Initialize labelmap with correct geometry
             if inputVolume:
                 labelmapNode.CopyOrientation(inputVolume)
                 labelmapNode.SetOrigin(inputVolume.GetOrigin())
                 labelmapNode.SetSpacing(inputVolume.GetSpacing())
-                dims = inputVolume.GetImageData().GetDimensions()
-                # We need to allocate the image data. 
-                # Easier way: Export visible segments to labelmap, then remap values?
-                # Or use Slicer's export with a color table?
-                pass
-
-            # Let's try the simplest approach first: 
-            # If the segments are named "vertebrae_C1", we know the ID is 11.
-            # We can create a color table node, set the names and values, and use that for export?
-            # No, export uses the segment's binary representation.
             
-            # Let's use `slicer.modules.segmentations.logic().ExportSegmentsToLabelmapNode`
-            # It takes a list of segment IDs.
-            
-            # We will create a new temporary segmentation node.
             tempSegNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentationNode")
             if segmentationNode.GetTransformNodeID():
                 tempSegNode.SetAndObserveTransformNodeID(segmentationNode.GetTransformNodeID())
             
-            # Copy segments to temp node, but ensure we track which segment maps to which value
             validSegments = []
-            
             for i in range(segmentation.GetNumberOfSegments()):
                 segId = segmentation.GetNthSegmentID(i)
                 segment = segmentation.GetSegment(segId)
@@ -650,65 +616,45 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
                 if name in reverseMapping:
                     val = reverseMapping[name]
                 else:
-                    # Try to parse number
                     try:
                         val = int(name)
-                    except:
+                    except ValueError:
                         pass
                 
                 if val is not None:
-                    # Add to temp seg
                     newSegment = slicer.vtkSegment()
                     newSegment.DeepCopy(segment)
                     tempSegNode.GetSegmentation().AddSegment(newSegment)
                     newSegId = tempSegNode.GetSegmentation().GetSegmentIdBySegment(newSegment)
                     validSegments.append((newSegId, val))
 
-            # Now export to labelmap. 
-            # We need to ensure the pixel value matches 'val'.
-            # We can do this by exporting each segment individually to a temporary labelmap with the specific value, 
-            # and adding it to the main accumulator labelmap.
-            
-            # Create accumulator labelmap
             slicer.modules.segmentations.logic().ExportSegmentsToLabelmapNode(tempSegNode, [], labelmapNode, inputVolume)
-            # Clear it (set to 0)
             image = labelmapNode.GetImageData()
-            if image:
-                image.GetPointData().GetScalars().FillComponent(0, 0)
-            else:
-                # If export failed to create image data (e.g. no reference volume), try without reference
+            
+            if not image:
                 slicer.modules.segmentations.logic().ExportSegmentsToLabelmapNode(tempSegNode, [], labelmapNode)
                 image = labelmapNode.GetImageData()
-                if image:
-                    image.GetPointData().GetScalars().FillComponent(0, 0)
 
             if image:
+                image.GetPointData().GetScalars().FillComponent(0, 0)
                 import vtk.util.numpy_support as vtk_np
-                import numpy as np
                 
-                # Get numpy array of accumulator
                 acc_array = vtk_np.vtk_to_numpy(image.GetPointData().GetScalars())
                 
-                # Iterate segments
                 for segId, val in validSegments:
-                    # Export single segment to temp labelmap
                     tempLabel = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLabelMapVolumeNode")
                     slicer.modules.segmentations.logic().ExportSegmentsToLabelmapNode(tempSegNode, [segId], tempLabel, labelmapNode)
                     
                     temp_image = tempLabel.GetImageData()
                     if temp_image:
                         temp_array = vtk_np.vtk_to_numpy(temp_image.GetPointData().GetScalars())
-                        # Where temp_array > 0, set acc_array to val
                         acc_array[temp_array > 0] = val
                     
                     slicer.mrmlScene.RemoveNode(tempLabel)
                 
                 image.Modified()
             
-            # Save the labelmap
             slicer.util.saveNode(labelmapNode, inputLocalizerFile)
-            
-            # Cleanup
             slicer.mrmlScene.RemoveNode(labelmapNode)
             slicer.mrmlScene.RemoveNode(tempSegNode)
             
@@ -888,43 +834,6 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             
             if labelValue is not None and labelValue in mapping:
                 segment.SetName(mapping[labelValue])
-
-    def revertTotalSpineSegTerminology(self, node):
-        segmentation = node.GetSegmentation()
-        mapping = self.getTerminologyMapping()
-        # Create reverse mapping: name -> id
-        reverseMapping = {v: k for k, v in mapping.items()}
-        
-        for i in range(segmentation.GetNumberOfSegments()):
-            segmentId = segmentation.GetNthSegmentID(i)
-            segment = segmentation.GetSegment(segmentId)
-            segmentName = segment.GetName()
-            
-            if segmentName in reverseMapping:
-                # We set the name to the ID, but we also need to ensure the label value is correct if we were exporting to labelmap
-                # However, Slicer's export to labelmap uses the segment ID or layer, not the name directly unless configured.
-                # But wait, the CLI tool likely expects a labelmap where pixel values correspond to these IDs.
-                # Slicer's ExportSegmentsToLabelmapNode uses the segment's label value if set, or generates new ones.
-                # We need to ensure the segment's label value matches the ID.
-                # But `segment` object doesn't have a label value property directly exposed easily for export control in all versions.
-                # Actually, when exporting to labelmap, we can specify a color table or use the segment indices.
-                
-                # The easiest way to ensure the output labelmap has the correct values is to rename the segments to the string of the ID,
-                # and then when exporting, Slicer might not automatically use that as the pixel value.
-                
-                # Better approach:
-                # When we export the segmentation to a labelmap node for saving, we can control the label values.
-                # Or, we can rename the segments to "1", "2", etc. and hope the export respects that? No.
-                
-                # Let's look at how we save the node. `slicer.util.saveNode(inputLocalizer, inputLocalizerFile)`
-                # If it's a segmentation node, Slicer saves it as .seg.nrrd or .nrrd.
-                # If we save as .nii.gz, Slicer exports it to a labelmap first.
-                # We need to ensure that the exported labelmap has the correct pixel values.
-                
-                # To do this reliably:
-                # 1. Create a temporary labelmap node.
-                # 2. Export segments to this labelmap node, mapping specific segments to specific values.
-                pass
 
 
 class TotalSpineSegTest(ScriptedLoadableModuleTest):
