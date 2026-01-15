@@ -146,6 +146,32 @@
           </property>
          </widget>
         </item>
+        <item>
+          <widget class="QToolButton" name="visibleLocalizerButton">
+           <property name="text">
+            <string>Eye</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="toolTip">
+            <string>Toggle visibility of the Localizer.</string>
+           </property>
+          </widget>
+        </item>
+        <item>
+          <widget class="QToolButton" name="show3DLocalizerButton">
+           <property name="text">
+            <string>3D</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="toolTip">
+            <string>Toggle 3D visibility of the Localizer.</string>
+           </property>
+          </widget>
+        </item>
        </layout>
       </item>
      </layout>

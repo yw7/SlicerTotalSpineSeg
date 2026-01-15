@@ -85,7 +85,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.eyeOffIcon = qt.QIcon(":/Icons/VisibleOff.png")
         threeDIcon = qt.QIcon(":/Icons/MakeModel.png")
 
-        for btn in [self.ui.visibleInputButton, self.ui.visibleStep2Button, self.ui.visibleStep1Button, self.ui.visibleLevelsButton, self.ui.visibleCordButton, self.ui.visibleCanalButton]:
+        for btn in [self.ui.visibleInputButton, self.ui.visibleLocalizerButton, self.ui.visibleStep2Button, self.ui.visibleStep1Button, self.ui.visibleLevelsButton, self.ui.visibleCordButton, self.ui.visibleCanalButton]:
             btn.setIcon(self.eyeIcon)
             if self.eyeIcon.isNull():
                 btn.setText("👁")
@@ -94,7 +94,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             btn.setToolTip(_("Show/Hide"))
             btn.setFixedSize(24, 24)
 
-        for btn in [self.ui.show3DInputButton, self.ui.show3DStep2Button, self.ui.show3DStep1Button, self.ui.show3DLevelsButton, self.ui.show3DCordButton, self.ui.show3DCanalButton]:
+        for btn in [self.ui.show3DInputButton, self.ui.show3DLocalizerButton, self.ui.show3DStep2Button, self.ui.show3DStep1Button, self.ui.show3DLevelsButton, self.ui.show3DCordButton, self.ui.show3DCanalButton]:
             btn.setIcon(threeDIcon)
             if threeDIcon.isNull():
                 btn.setText("3D")
@@ -148,6 +148,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.outputCanalSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onLoadCanalChanged)
 
         self.ui.visibleInputButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleInputButton, self.ui.inputVolumeSelector.currentNode()))
+        self.ui.visibleLocalizerButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleLocalizerButton, self.ui.inputLocalizerSelector.currentNode()))
         self.ui.visibleStep2Button.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleStep2Button, self.ui.outputStep2Selector.currentNode()))
         self.ui.visibleStep1Button.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleStep1Button, self.ui.outputStep1Selector.currentNode()))
         self.ui.visibleLevelsButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleLevelsButton, self.ui.outputLevelsSelector.currentNode()))
@@ -155,6 +156,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.visibleCanalButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleCanalButton, self.ui.outputCanalSelector.currentNode()))
 
         self.ui.show3DInputButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.inputVolumeSelector.currentNode()))
+        self.ui.show3DLocalizerButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.inputLocalizerSelector.currentNode()))
         self.ui.show3DStep2Button.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.outputStep2Selector.currentNode()))
         self.ui.show3DStep1Button.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.outputStep1Selector.currentNode()))
         self.ui.show3DLevelsButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.outputLevelsSelector.currentNode()))
@@ -509,7 +511,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             layoutManager = slicer.app.layoutManager()
             sliceLogic = layoutManager.sliceWidget("Red").sliceLogic()
             
-            if button == self.ui.visibleInputButton:
+            if button == self.ui.visibleInputButton or button == self.ui.visibleLocalizerButton:
                 bg = sliceLogic.GetBackgroundLayer().GetVolumeNode()
                 if bg == node:
                     slicer.util.setSliceViewerLayers(background=None)
