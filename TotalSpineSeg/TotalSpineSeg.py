@@ -313,6 +313,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.applyTerminologyCheckBox.checked = self._parameterNode.GetParameter("UseStandardSegmentNames") == "true"
         self.ui.isoCheckBox.checked = self._parameterNode.GetParameter("Iso") == "true"
 
+        self.updateAllButtonsState()
         self.onSelect()
         self._updatingGUIFromParameterNode = False
 
@@ -515,25 +516,19 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 bg = sliceLogic.GetBackgroundLayer().GetVolumeNode()
                 if bg == node:
                     slicer.util.setSliceViewerLayers(background=None)
-                    visible = False
                 else:
                     slicer.util.setSliceViewerLayers(background=node)
-                    visible = True
             else:
                 fg = sliceLogic.GetForegroundLayer().GetVolumeNode()
                 if fg == node:
                     slicer.util.setSliceViewerLayers(foreground=None)
-                    visible = False
                 else:
                     slicer.util.setSliceViewerLayers(foreground=node, foregroundOpacity=1.0)
-                    visible = True
         
-        if visible:
-            button.setIcon(self.eyeIcon)
-            if self.eyeIcon.isNull(): button.setText("👁")
-        else:
-            button.setIcon(self.eyeOffIcon)
-            if self.eyeOffIcon.isNull(): button.setText("○")
+        # UI update is now handled by updateAllButtonsState() which should be called,
+        # but since we don't have a global event for visibility change not triggered by us,
+        # we can just call updateAllButtonsState() here to sync everything.
+        self.updateAllButtonsState()
 
     def on3DToggled(self, node):
         if not node: return
@@ -560,6 +555,66 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             else:
                 displayNode = volRenLogic.CreateDefaultVolumeRenderingNodes(node)
                 displayNode.SetVisibility(True)
+        
+        self.updateAllButtonsState()
+    
+    def updateAllButtonsState(self):
+        self.updateButtonWidgets(self.ui.visibleInputButton, self.ui.show3DInputButton, self.ui.inputVolumeSelector.currentNode())
+        self.updateButtonWidgets(self.ui.visibleLocalizerButton, self.ui.show3DLocalizerButton, self.ui.inputLocalizerSelector.currentNode())
+        self.updateButtonWidgets(self.ui.visibleStep1Button, self.ui.show3DStep1Button, self.ui.outputStep1Selector.currentNode())
+        self.updateButtonWidgets(self.ui.visibleStep2Button, self.ui.show3DStep2Button, self.ui.outputStep2Selector.currentNode())
+        self.updateButtonWidgets(self.ui.visibleLevelsButton, self.ui.show3DLevelsButton, self.ui.outputLevelsSelector.currentNode())
+        self.updateButtonWidgets(self.ui.visibleCordButton, self.ui.show3DCordButton, self.ui.outputCordSelector.currentNode())
+        self.updateButtonWidgets(self.ui.visibleCanalButton, self.ui.show3DCanalButton, self.ui.outputCanalSelector.currentNode())
+
+    def updateButtonWidgets(self, eyeBtn, threeDBtn, node):
+        if not node:
+             eyeBtn.setChecked(False)
+             eyeBtn.setIcon(self.eyeOffIcon)
+             threeDBtn.setChecked(False)
+             return
+
+        # Check Visibility
+        isVisible = False
+        if node.IsA("vtkMRMLSegmentationNode"):
+             dn = node.GetDisplayNode()
+             if dn: isVisible = dn.GetVisibility()
+        elif node.IsA("vtkMRMLScalarVolumeNode"):
+             layoutManager = slicer.app.layoutManager()
+             if layoutManager:
+                 sliceLogic = layoutManager.sliceWidget("Red").sliceLogic()
+                 if eyeBtn in [self.ui.visibleInputButton, self.ui.visibleLocalizerButton]:
+                     bg = sliceLogic.GetBackgroundLayer().GetVolumeNode()
+                     isVisible = (bg == node)
+                 else:
+                     fg = sliceLogic.GetForegroundLayer().GetVolumeNode()
+                     isVisible = (fg == node)
+        
+        # Update Eye Button
+        eyeBtn.setChecked(isVisible)
+        if isVisible:
+            if not self.eyeIcon.isNull():
+                eyeBtn.setIcon(self.eyeIcon)
+            else:
+                eyeBtn.setText("👁")
+        else:
+            if not self.eyeOffIcon.isNull():
+                eyeBtn.setIcon(self.eyeOffIcon)
+            else:
+                eyeBtn.setText("○")
+
+        # Check 3D Visibility
+        is3DVisible = False
+        if node.IsA("vtkMRMLSegmentationNode"):
+             dn = node.GetDisplayNode()
+             if dn: is3DVisible = dn.GetVisibility3D()
+        elif node.IsA("vtkMRMLScalarVolumeNode"):
+             volRenLogic = slicer.modules.volumerendering.logic()
+             dn = volRenLogic.GetFirstVolumeRenderingDisplayNode(node)
+             if dn: is3DVisible = dn.GetVisibility()
+        
+        threeDBtn.setChecked(is3DVisible)
+
 
     def onPackageInfoUpdate(self):
         self.ui.packageInfoTextBrowser.plainText = ''
