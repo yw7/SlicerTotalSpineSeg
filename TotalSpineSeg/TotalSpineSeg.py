@@ -245,7 +245,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             importlib.invalidate_caches()
             
             # Double check if packages are still missing
-            stillMissing = self.logic.checkDependencies()
+            stillMissing = self.logic.checkDependencies(force=True)
             if stillMissing:
                 # If still missing after install, force restart
                 if slicer.util.confirmOkCancelDisplay(f"Installation completed, but the following packages are not yet loaded: {', '.join(stillMissing)}.\n\nA restart is required to complete the setup. Restart now?"):
@@ -624,10 +624,15 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             versionInfo += "Download URL: " + downloadUrl
         return versionInfo
 
-    def checkDependencies(self):
+    def checkDependencies(self, force=False):
         import importlib
         importlib.invalidate_caches()
         from packaging.requirements import Requirement
+
+        settings = slicer.app.userSettings()
+        settingsKey = "TotalSpineSeg/DependencyCheckPassed"
+        if not force and settings.value(settingsKey) == "true":
+            return []
 
         missingPackages = []
         em = slicer.app.extensionsManagerModel()
@@ -672,6 +677,11 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             import totalspineseg
         except ImportError:
             missingPackages.append("totalspineseg")
+
+        if not missingPackages:
+            settings.setValue(settingsKey, "true")
+        else:
+            settings.setValue(settingsKey, "false")
 
         return list(set(missingPackages))
 
