@@ -85,7 +85,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.eyeOffIcon = qt.QIcon(":/Icons/VisibleOff.png")
         threeDIcon = qt.QIcon(":/Icons/MakeModel.png")
 
-        for btn in [self.ui.visibleStep2Button, self.ui.visibleStep1Button, self.ui.visibleLevelsButton, self.ui.visibleCordButton, self.ui.visibleCanalButton]:
+        for btn in [self.ui.visibleInputButton, self.ui.visibleStep2Button, self.ui.visibleStep1Button, self.ui.visibleLevelsButton, self.ui.visibleCordButton, self.ui.visibleCanalButton]:
             btn.setIcon(self.eyeIcon)
             if self.eyeIcon.isNull():
                 btn.setText("👁")
@@ -94,7 +94,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             btn.setToolTip(_("Show/Hide"))
             btn.setFixedSize(24, 24)
 
-        for btn in [self.ui.show3DStep2Button, self.ui.show3DStep1Button, self.ui.show3DLevelsButton, self.ui.show3DCordButton, self.ui.show3DCanalButton]:
+        for btn in [self.ui.show3DInputButton, self.ui.show3DStep2Button, self.ui.show3DStep1Button, self.ui.show3DLevelsButton, self.ui.show3DCordButton, self.ui.show3DCanalButton]:
             btn.setIcon(threeDIcon)
             if threeDIcon.isNull():
                 btn.setText("3D")
@@ -104,7 +104,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             btn.setFixedSize(24, 24)
 
         # Setup Load Buttons
-        for btn in [self.ui.loadStep2FileButton, self.ui.loadStep1FileButton, self.ui.loadLevelsFileButton, self.ui.loadCordFileButton, self.ui.loadCanalFileButton, self.ui.inputVolumeFileButton, self.ui.inputLocalizerFileButton]:
+        for btn in [self.ui.loadInputFileButton, self.ui.loadStep2FileButton, self.ui.loadStep1FileButton, self.ui.loadLevelsFileButton, self.ui.loadCordFileButton, self.ui.loadCanalFileButton, self.ui.inputVolumeFileButton, self.ui.inputLocalizerFileButton]:
             btn.setIcon(qt.QIcon())
             btn.setText("...")
             btn.setToolTip(_("Load from file"))
@@ -113,7 +113,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Fix Width Issues
         for combo in [self.ui.inputVolumeSelector, self.ui.inputLocalizerSelector, self.ui.outputStep1Selector, self.ui.outputStep2Selector, 
                       self.ui.outputCordSelector, self.ui.outputCanalSelector, self.ui.outputLevelsSelector,
-                      self.ui.loadStep2Selector, self.ui.loadStep1Selector, self.ui.loadLevelsSelector, 
+                      self.ui.loadInputSelector, self.ui.loadStep2Selector, self.ui.loadStep1Selector, self.ui.loadLevelsSelector, 
                       self.ui.loadCordSelector, self.ui.loadCanalSelector]:
             combo.setSizePolicy(qt.QSizePolicy.Ignored, qt.QSizePolicy.Fixed)
         
@@ -145,6 +145,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.packageInfoUpdateButton.connect('clicked(bool)', self.onPackageInfoUpdate)
         self.ui.packageUpgradeButton.connect('clicked(bool)', self.onPackageUpgrade)
 
+        self.ui.loadInputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.loadStep2Selector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.loadStep1Selector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.loadLevelsSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
@@ -155,18 +156,21 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.loadCordSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onLoadCordChanged)
         self.ui.loadCanalSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onLoadCanalChanged)
 
+        self.ui.visibleInputButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleInputButton, self.ui.loadInputSelector.currentNode()))
         self.ui.visibleStep2Button.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleStep2Button, self.ui.loadStep2Selector.currentNode()))
         self.ui.visibleStep1Button.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleStep1Button, self.ui.loadStep1Selector.currentNode()))
         self.ui.visibleLevelsButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleLevelsButton, self.ui.loadLevelsSelector.currentNode()))
         self.ui.visibleCordButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleCordButton, self.ui.loadCordSelector.currentNode()))
         self.ui.visibleCanalButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleCanalButton, self.ui.loadCanalSelector.currentNode()))
 
+        self.ui.show3DInputButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.loadInputSelector.currentNode()))
         self.ui.show3DStep2Button.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.loadStep2Selector.currentNode()))
         self.ui.show3DStep1Button.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.loadStep1Selector.currentNode()))
         self.ui.show3DLevelsButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.loadLevelsSelector.currentNode()))
         self.ui.show3DCordButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.loadCordSelector.currentNode()))
         self.ui.show3DCanalButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.loadCanalSelector.currentNode()))
 
+        self.ui.loadInputFileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.loadInputSelector))
         self.ui.loadStep2FileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.loadStep2Selector))
         self.ui.loadStep1FileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.loadStep1Selector))
         self.ui.loadLevelsFileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.loadLevelsSelector))
@@ -272,7 +276,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Explicitly clear selectors to prevent Subject Hierarchy warnings during close
         for selector in [self.ui.inputVolumeSelector, self.ui.inputLocalizerSelector, self.ui.outputStep1Selector, self.ui.outputStep2Selector, 
                          self.ui.outputCordSelector, self.ui.outputCanalSelector, self.ui.outputLevelsSelector,
-                         self.ui.loadStep1Selector, self.ui.loadStep2Selector, self.ui.loadCordSelector, 
+                         self.ui.loadInputSelector, self.ui.loadStep1Selector, self.ui.loadStep2Selector, self.ui.loadCordSelector, 
                          self.ui.loadCanalSelector, self.ui.loadLevelsSelector]:
             selector.setCurrentNode(None)
 
@@ -314,6 +318,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.applyTerminologyCheckBox.checked = self._parameterNode.GetParameter("UseStandardSegmentNames") == "true"
         self.ui.isoCheckBox.checked = self._parameterNode.GetParameter("Iso") == "true"
 
+        self.ui.loadInputSelector.setCurrentNode(self._parameterNode.GetNodeReference("InputVolume"))
         self.ui.loadStep1Selector.setCurrentNode(self._parameterNode.GetNodeReference("OutputStep1"))
         self.ui.loadStep2Selector.setCurrentNode(self._parameterNode.GetNodeReference("OutputStep2"))
         self.ui.loadCordSelector.setCurrentNode(self._parameterNode.GetNodeReference("OutputCord"))
@@ -341,6 +346,8 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self._parameterNode.SetParameter("UseStandardSegmentNames", "true" if self.ui.applyTerminologyCheckBox.checked else "false")
         self._parameterNode.SetParameter("Iso", "true" if self.ui.isoCheckBox.checked else "false")
 
+        if caller == self.ui.loadInputSelector:
+             self._parameterNode.SetNodeReferenceID("InputVolume", self.ui.loadInputSelector.currentNodeID)
         if caller == self.ui.loadStep1Selector:
              self._parameterNode.SetNodeReferenceID("OutputStep1", self.ui.loadStep1Selector.currentNodeID)
         if caller == self.ui.loadStep2Selector:
@@ -392,8 +399,13 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if volNode:
                 selector.setCurrentNode(volNode)
                 # Note: onLoadCordChanged/onLoadCanalChanged will trigger and apply style/foreground
+        elif selector == self.ui.loadInputSelector or selector == self.ui.inputVolumeSelector:
+             # Load as background
+            volNode = slicer.util.loadVolume(file_path, {"show": True})
+            if volNode:
+                selector.setCurrentNode(volNode)
         else:
-            # Input volume or generic
+            # Generic
             volNode = slicer.util.loadVolume(file_path)
             if volNode:
                 selector.setCurrentNode(volNode)
@@ -525,13 +537,23 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         elif node.IsA("vtkMRMLScalarVolumeNode"):
             layoutManager = slicer.app.layoutManager()
             sliceLogic = layoutManager.sliceWidget("Red").sliceLogic()
-            fg = sliceLogic.GetForegroundLayer().GetVolumeNode()
-            if fg == node:
-                slicer.util.setSliceViewerLayers(foreground=None)
-                visible = False
+            
+            if button == self.ui.visibleInputButton:
+                bg = sliceLogic.GetBackgroundLayer().GetVolumeNode()
+                if bg == node:
+                    slicer.util.setSliceViewerLayers(background=None)
+                    visible = False
+                else:
+                    slicer.util.setSliceViewerLayers(background=node)
+                    visible = True
             else:
-                slicer.util.setSliceViewerLayers(foreground=node, foregroundOpacity=1.0)
-                visible = True
+                fg = sliceLogic.GetForegroundLayer().GetVolumeNode()
+                if fg == node:
+                    slicer.util.setSliceViewerLayers(foreground=None)
+                    visible = False
+                else:
+                    slicer.util.setSliceViewerLayers(foreground=node, foregroundOpacity=1.0)
+                    visible = True
         
         if visible:
             button.setIcon(self.eyeIcon)
