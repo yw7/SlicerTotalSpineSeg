@@ -148,8 +148,9 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.outputCanalSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onLoadCanalChanged)
         
         # Connect output selectors to handle terminology application on selection change
-        for selector in [self.ui.outputStep1Selector, self.ui.outputStep2Selector, self.ui.outputLevelsSelector]:
-             selector.connect("currentNodeChanged(vtkMRMLNode*)", self.onOutputNodeChanged)
+        self.ui.outputStep1Selector.connect("currentNodeChanged(vtkMRMLNode*)", lambda n: self.onOutputNodeChanged(n, self.ui.outputStep1Selector))
+        self.ui.outputStep2Selector.connect("currentNodeChanged(vtkMRMLNode*)", lambda n: self.onOutputNodeChanged(n, self.ui.outputStep2Selector))
+        self.ui.outputLevelsSelector.connect("currentNodeChanged(vtkMRMLNode*)", lambda n: self.onOutputNodeChanged(n, self.ui.outputLevelsSelector))
 
         self.ui.visibleInputButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleInputButton, self.ui.inputVolumeSelector.currentNode()))
         self.ui.visibleLocalizerButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleLocalizerButton, self.ui.inputLocalizerSelector.currentNode()))
@@ -514,13 +515,11 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                      renameSacrum = (selector == self.ui.outputStep1Selector)
                      self.logic.applyTotalSpineSegTerminology(node, renameSacrumToVertebrae=renameSacrum)
 
-    def onOutputNodeChanged(self, node):
+    def onOutputNodeChanged(self, node, selector):
         if node and self.ui.applyTerminologyCheckBox.checked and node.IsA("vtkMRMLSegmentationNode"):
-             # Sender is strictly the widget that emitted the signal
-             selector = self.sender()
              isStep1 = (selector == self.ui.outputStep1Selector)
              self.logic.applyTotalSpineSegTerminology(node, renameSacrumToVertebrae=isStep1)
-
+    
     def onVisibilityToggled(self, button, node):
         if not node: return
         visible = True
