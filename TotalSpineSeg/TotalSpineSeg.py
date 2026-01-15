@@ -136,7 +136,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.outputLevelsSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         
         self.ui.cpuCheckBox.connect('toggled(bool)', self.updateParameterNodeFromGUI)
-        self.ui.applyTerminologyCheckBox.connect('toggled(bool)', self.updateParameterNodeFromGUI)
+        self.ui.applyTerminologyCheckBox.connect('toggled(bool)', self.onApplyTerminologyToggled)
         self.ui.isoCheckBox.connect('toggled(bool)', self.updateParameterNodeFromGUI)
 
         self.ui.applyButton.connect('clicked(bool)', self.onApplyButton)
@@ -146,6 +146,10 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Apply styles when selected
         self.ui.outputCordSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onLoadCordChanged)
         self.ui.outputCanalSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onLoadCanalChanged)
+        
+        # Connect output selectors to handle terminology application on selection change
+        for selector in [self.ui.outputStep1Selector, self.ui.outputStep2Selector, self.ui.outputLevelsSelector]:
+             selector.connect("currentNodeChanged(vtkMRMLNode*)", self.onOutputNodeChanged)
 
         self.ui.visibleInputButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleInputButton, self.ui.inputVolumeSelector.currentNode()))
         self.ui.visibleLocalizerButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleLocalizerButton, self.ui.inputLocalizerSelector.currentNode()))
@@ -364,7 +368,8 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(labelNode, segNode)
                 slicer.mrmlScene.RemoveNode(labelNode)
                 if self.ui.applyTerminologyCheckBox.checked:
-                    self.logic.applyTotalSpineSegTerminology(segNode)
+                    renameSacrum = (selector == self.ui.outputStep1Selector)
+                    self.logic.applyTotalSpineSegTerminology(segNode, renameSacrumToVertebrae=renameSacrum)
                 
                 segNode.CreateDefaultDisplayNodes()
                 slicer.app.processEvents()
@@ -499,6 +504,22 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             
             # Set as Foreground
             slicer.util.setSliceViewerLayers(foreground=node, foregroundOpacity=1.0)
+            
+    def onApplyTerminologyToggled(self, checked):
+        self.updateParameterNodeFromGUI()
+        if checked:
+            for selector in [self.ui.outputStep1Selector, self.ui.outputStep2Selector, self.ui.outputLevelsSelector]:
+                node = selector.currentNode()
+                if node and node.IsA("vtkMRMLSegmentationNode"):
+                     renameSacrum = (selector == self.ui.outputStep1Selector)
+                     self.logic.applyTotalSpineSegTerminology(node, renameSacrumToVertebrae=renameSacrum)
+
+    def onOutputNodeChanged(self, node):
+        if node and self.ui.applyTerminologyCheckBox.checked and node.IsA("vtkMRMLSegmentationNode"):
+             # Sender is strictly the widget that emitted the signal
+             selector = self.sender()
+             isStep1 = (selector == self.ui.outputStep1Selector)
+             self.logic.applyTotalSpineSegTerminology(node, renameSacrumToVertebrae=isStep1)
 
     def onVisibilityToggled(self, button, node):
         if not node: return
@@ -1060,14 +1081,22 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             91: "disc_T12_L1", 92: "disc_L1_L2", 93: "disc_L2_L3", 94: "disc_L3_L4", 95: "disc_L4_L5", 100: "disc_L5_S1"
         }
 
-    def applyTotalSpineSegTerminology(self, node):
+    def applyTotalSpineSegTerminology(self, node, renameSacrumToVertebrae=False):
         segmentation = node.GetSegmentation()
         mapping = self.getTerminologyMapping()
+        # Avoid renaming if already in mapping values to prevent misinterpretation (e.g. C1 -> 1 -> spinal_cord)
+        known_names = set(mapping.values())
         
         for i in range(segmentation.GetNumberOfSegments()):
             segmentId = segmentation.GetNthSegmentID(i)
             segment = segmentation.GetSegment(segmentId)
             segmentName = segment.GetName()
+            
+            if segmentName in known_names:
+                if renameSacrumToVertebrae and segmentName == "sacrum":
+                    segment.SetName("Vertebrae")
+                continue
+                
             labelValue = None
             try:
                 labelValue = int(segmentName)
@@ -1078,7 +1107,10 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
                     labelValue = int(numbers[-1])
             
             if labelValue is not None and labelValue in mapping:
-                segment.SetName(mapping[labelValue])
+                newName = mapping[labelValue]
+                if renameSacrumToVertebrae and newName == "sacrum":
+                    newName = "Vertebrae"
+                segment.SetName(newName)
 
 
 class TotalSpineSegTest(ScriptedLoadableModuleTest):
