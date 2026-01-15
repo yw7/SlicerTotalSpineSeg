@@ -378,7 +378,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 slicer.app.processEvents()
                 selector.setCurrentNodeID(segNode.GetID())
         elif isCord or isCanal:
-            # Load as volume, hidden initially to avoid replacing background
+             # Load as volume, hidden initially to avoid replacing background
             volNode = slicer.util.loadVolume(file_path, {"show": False})
             if volNode:
                 selector.setCurrentNode(volNode)
@@ -393,6 +393,10 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             volNode = slicer.util.loadVolume(file_path)
             if volNode:
                 selector.setCurrentNode(volNode)
+
+        # Ensure UI state matches loaded node visibility
+        slicer.app.processEvents()
+        self.updateAllButtonsState()
 
     def onInstallAnimationTimer(self):
         self.installAnimationCounter = (self.installAnimationCounter + 1) % 4
@@ -481,16 +485,59 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.applyButton.enabled = True
         if success:
             self.ui.statusLabel.appendPlainText("\n" + _("Processing finished."))
+
+            # Visibility Logic:
+            # 1. Step 2 (if present)
+            # 2. Step 1 (if present and not Step 2)
+            # 3. Levels (if present and neither above)
+            # 4. Canal (if present and none above)
+            # 5. Cord (if present and none above)
+            
+            step2 = self.ui.outputStep2Selector.currentNode()
+            step1 = self.ui.outputStep1Selector.currentNode()
+            levels = self.ui.outputLevelsSelector.currentNode()
+            canal = self.ui.outputCanalSelector.currentNode()
+            cord = self.ui.outputCordSelector.currentNode()
+            
+            visibleNode = None
+            if step2: visibleNode = step2
+            elif step1: visibleNode = step1
+            elif levels: visibleNode = levels
+            elif canal: visibleNode = canal
+            elif cord: visibleNode = cord
+            
+            for node in [step2, step1, levels, canal, cord]:
+                if not node: continue
+                shouldBeVisible = (node == visibleNode)
+                
+                if node.IsA("vtkMRMLSegmentationNode"):
+                    dn = node.GetDisplayNode()
+                    if dn: dn.SetVisibility(shouldBeVisible)
+                elif node.IsA("vtkMRMLScalarVolumeNode"):
+                    # For volume nodes (output), visibility usually means Foreground
+                    if shouldBeVisible:
+                        slicer.util.setSliceViewerLayers(foreground=node, foregroundOpacity=1.0)
+                    else:
+                        layoutManager = slicer.app.layoutManager()
+                        if layoutManager:
+                            sliceLogic = layoutManager.sliceWidget("Red").sliceLogic()
+                            fg = sliceLogic.GetForegroundLayer().GetVolumeNode()
+                            if fg == node:
+                                slicer.util.setSliceViewerLayers(foreground=None)
+
+            self.updateAllButtonsState()
         else:
             self.ui.statusLabel.appendPlainText("\n" + _("Processing failed."))
 
     def onLoadCordChanged(self, node):
         if node:
             self.applyVolumeStyle(node, "vtkMRMLColorTableNodeGreen")
+        self.updateAllButtonsState()
 
     def onLoadCanalChanged(self, node):
         if node:
             self.applyVolumeStyle(node, "vtkMRMLColorTableNodeYellow")
+        self.updateAllButtonsState()
 
     def applyVolumeStyle(self, node, colorNodeID):
         if node.IsA("vtkMRMLScalarVolumeNode"):
@@ -617,11 +664,13 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if isVisible:
             if not self.eyeIcon.isNull():
                 eyeBtn.setIcon(self.eyeIcon)
+                eyeBtn.setText("")
             else:
                 eyeBtn.setText("👁")
         else:
             if not self.eyeOffIcon.isNull():
                 eyeBtn.setIcon(self.eyeOffIcon)
+                eyeBtn.setText("")
             else:
                 eyeBtn.setText("○")
 
@@ -636,7 +685,6 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
              if dn: is3DVisible = dn.GetVisibility()
         
         threeDBtn.setChecked(is3DVisible)
-
 
     def onPackageInfoUpdate(self):
         self.ui.packageInfoTextBrowser.plainText = ''
