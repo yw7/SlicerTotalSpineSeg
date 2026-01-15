@@ -40,32 +40,24 @@ If you use this extension in your research, please cite the following papers:
     - If required Python packages are missing, you will see an **Install Dependencies** button instead of the main interface.
     - Click it to install the necessary dependencies (TotalSpineSeg, nnU-Net, PyTorch, etc.).
     - Once installation is complete, the main interface will appear.
-4. **Inputs** (in the **Segment** tab):
-    - Select the **Input Volume** (choose a loaded volume or load from file).
+4. **Inputs**:
+    - Select the **Input Volume** (choose a loaded volume or load from file using `...`).
+    - Use the **Eye** and **3D** icons next to the selector to toggle visibility.
     - (Optional) Select a **Localizer** segmentation (Step 1 or Step 2 output). This is the output of the model on a localizer image, used to ensure accurate instance segmentation on short FOV scans that do not contain C1 or Sacrum.
 5. **Outputs**:
-    - Select or create output nodes for the desired segmentations:
+    - Select or create output nodes for the desired segmentations. You can also load existing files using the `...` button next to each selector.
+    - Each output row has **Eye** and **3D** icons to quickly toggle visibility of results.
+    - **Available Outputs**:
         - **Step 2**: Segmentation of canal, cord, and instance segmentation of vertebrae and discs.
         - **Step 1**: Segmentation of canal, cord, vertebrae (binary), and instance segmentation of discs.
         - **Cord**: Spinal cord soft segmentation (probability map).
         - **Canal**: Spinal canal soft segmentation (probability map).
         - **Levels**: Single-voxel vertebral levels at the posterior tip of each disc (similar to SCT).
-    - **Apply anatomical terminology**: Check this to rename segments to standard anatomical names (e.g., "vertebrae_C1").
+    - **Apply anatomical terminology**: Check this to rename segments to standard anatomical names (e.g., "vertebrae_C1"). This applies on file load, node selection, or when toggled.
     - **Isotropic output**: Check this to keep the output at 1mm³ resolution (as used by the model) instead of resampling back to input space.
 6. Click **Apply**.
    - On the first run, the module will download the model weights. This may take several minutes.
    - Subsequent runs will be faster.
-
-## Viewing Results
-
-The **View** tab allows you to easily load and visualize existing segmentation results.
-
-1.  **Apply anatomical terminology**: If checked, loaded segmentation files will be automatically renamed to standard anatomical terms.
-2.  **Load Buttons**: Use the `...` button next to each category (Step 2, Step 1, Levels, Cord, Canal) to load a file from disk.
-3.  **Visibility Controls**:
-    *   **Eye Icon**: Toggle 2D visibility in slice views.
-    *   **3D Icon**: Toggle 3D surface rendering.
-4.  **Selectors**: You can also select existing nodes from the scene to control their visibility.
 
 ## Features
 
