@@ -368,7 +368,9 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 segNode.SetName(os.path.splitext(os.path.basename(file_path))[0])
                 slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(labelNode, segNode)
                 slicer.mrmlScene.RemoveNode(labelNode)
-                if self.ui.applyTerminologyCheckBox.checked:
+                
+                # Apply terminology if checked, but exclude Localizer (should keep original labels usually)
+                if self.ui.applyTerminologyCheckBox.checked and selector != self.ui.inputLocalizerSelector:
                     renameSacrum = (selector == self.ui.outputStep1Selector)
                     self.logic.applyTotalSpineSegTerminology(segNode, renameSacrumToVertebrae=renameSacrum)
                 
@@ -478,9 +480,9 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def onProcessingFinished(self, success):
         self.ui.applyButton.enabled = True
         if success:
-            self.ui.statusLabel.appendPlainText("\\n" + _("Processing finished."))
+            self.ui.statusLabel.appendPlainText("\n" + _("Processing finished."))
         else:
-            self.ui.statusLabel.appendPlainText("\\n" + _("Processing failed."))
+            self.ui.statusLabel.appendPlainText("\n" + _("Processing failed."))
 
     def onLoadCordChanged(self, node):
         if node:
