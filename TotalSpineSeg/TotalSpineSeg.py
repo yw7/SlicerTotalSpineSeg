@@ -104,7 +104,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             btn.setFixedSize(24, 24)
 
         # Setup Load Buttons
-        for btn in [self.ui.loadInputFileButton, self.ui.loadStep2FileButton, self.ui.loadStep1FileButton, self.ui.loadLevelsFileButton, self.ui.loadCordFileButton, self.ui.loadCanalFileButton, self.ui.inputVolumeFileButton, self.ui.inputLocalizerFileButton]:
+        for btn in [self.ui.loadStep2FileButton, self.ui.loadStep1FileButton, self.ui.loadLevelsFileButton, self.ui.loadCordFileButton, self.ui.loadCanalFileButton, self.ui.inputVolumeFileButton, self.ui.inputLocalizerFileButton]:
             btn.setIcon(qt.QIcon())
             btn.setText("...")
             btn.setToolTip(_("Load from file"))
@@ -112,9 +112,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Fix Width Issues
         for combo in [self.ui.inputVolumeSelector, self.ui.inputLocalizerSelector, self.ui.outputStep1Selector, self.ui.outputStep2Selector, 
-                      self.ui.outputCordSelector, self.ui.outputCanalSelector, self.ui.outputLevelsSelector,
-                      self.ui.loadInputSelector, self.ui.loadStep2Selector, self.ui.loadStep1Selector, self.ui.loadLevelsSelector, 
-                      self.ui.loadCordSelector, self.ui.loadCanalSelector]:
+                      self.ui.outputCordSelector, self.ui.outputCanalSelector, self.ui.outputLevelsSelector]:
             combo.setSizePolicy(qt.QSizePolicy.Ignored, qt.QSizePolicy.Fixed)
         
         # Ensure localizer selector is enabled and configured
@@ -145,39 +143,33 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.packageInfoUpdateButton.connect('clicked(bool)', self.onPackageInfoUpdate)
         self.ui.packageUpgradeButton.connect('clicked(bool)', self.onPackageUpgrade)
 
-        self.ui.loadInputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
-        self.ui.loadStep2Selector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
-        self.ui.loadStep1Selector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
-        self.ui.loadLevelsSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
-        self.ui.loadCordSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
-        self.ui.loadCanalSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
+        # Apply styles when selected
+        self.ui.outputCordSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onLoadCordChanged)
+        self.ui.outputCanalSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onLoadCanalChanged)
 
-        # Apply styles when selected in Load tab
-        self.ui.loadCordSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onLoadCordChanged)
-        self.ui.loadCanalSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onLoadCanalChanged)
+        self.ui.visibleInputButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleInputButton, self.ui.inputVolumeSelector.currentNode()))
+        self.ui.visibleStep2Button.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleStep2Button, self.ui.outputStep2Selector.currentNode()))
+        self.ui.visibleStep1Button.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleStep1Button, self.ui.outputStep1Selector.currentNode()))
+        self.ui.visibleLevelsButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleLevelsButton, self.ui.outputLevelsSelector.currentNode()))
+        self.ui.visibleCordButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleCordButton, self.ui.outputCordSelector.currentNode()))
+        self.ui.visibleCanalButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleCanalButton, self.ui.outputCanalSelector.currentNode()))
 
-        self.ui.visibleInputButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleInputButton, self.ui.loadInputSelector.currentNode()))
-        self.ui.visibleStep2Button.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleStep2Button, self.ui.loadStep2Selector.currentNode()))
-        self.ui.visibleStep1Button.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleStep1Button, self.ui.loadStep1Selector.currentNode()))
-        self.ui.visibleLevelsButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleLevelsButton, self.ui.loadLevelsSelector.currentNode()))
-        self.ui.visibleCordButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleCordButton, self.ui.loadCordSelector.currentNode()))
-        self.ui.visibleCanalButton.connect('clicked(bool)', lambda b: self.onVisibilityToggled(self.ui.visibleCanalButton, self.ui.loadCanalSelector.currentNode()))
+        self.ui.show3DInputButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.inputVolumeSelector.currentNode()))
+        self.ui.show3DStep2Button.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.outputStep2Selector.currentNode()))
+        self.ui.show3DStep1Button.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.outputStep1Selector.currentNode()))
+        self.ui.show3DLevelsButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.outputLevelsSelector.currentNode()))
+        self.ui.show3DCordButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.outputCordSelector.currentNode()))
+        self.ui.show3DCanalButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.outputCanalSelector.currentNode()))
 
-        self.ui.show3DInputButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.loadInputSelector.currentNode()))
-        self.ui.show3DStep2Button.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.loadStep2Selector.currentNode()))
-        self.ui.show3DStep1Button.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.loadStep1Selector.currentNode()))
-        self.ui.show3DLevelsButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.loadLevelsSelector.currentNode()))
-        self.ui.show3DCordButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.loadCordSelector.currentNode()))
-        self.ui.show3DCanalButton.connect('clicked(bool)', lambda b: self.on3DToggled(self.ui.loadCanalSelector.currentNode()))
-
-        self.ui.loadInputFileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.loadInputSelector))
-        self.ui.loadStep2FileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.loadStep2Selector))
-        self.ui.loadStep1FileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.loadStep1Selector))
-        self.ui.loadLevelsFileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.loadLevelsSelector))
-        self.ui.loadCordFileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.loadCordSelector))
-        self.ui.loadCanalFileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.loadCanalSelector))
         self.ui.inputVolumeFileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.inputVolumeSelector))
         self.ui.inputLocalizerFileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.inputLocalizerSelector))
+        
+        # The new file buttons in outputs section
+        self.ui.loadStep2FileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.outputStep2Selector))
+        self.ui.loadStep1FileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.outputStep1Selector))
+        self.ui.loadLevelsFileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.outputLevelsSelector))
+        self.ui.loadCordFileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.outputCordSelector))
+        self.ui.loadCanalFileButton.connect('clicked(bool)', lambda b: self.onLoadFile(self.ui.outputCanalSelector))
 
         self.initializeParameterNode()
         self.onSelect()
@@ -206,18 +198,21 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             missingPackages = [] # Assume installed or handle error? 
             # If check fails, better to show error.
             self.installLabel.setText(f"Error checking dependencies:\n{str(e)}")
-            self.ui.tabWidget.hide()
+            if hasattr(self.ui, 'inputsCollapsibleButton'):
+                 self.ui.inputsCollapsibleButton.hide()
             self.installWidget.show()
             return
 
         if missingPackages:
-            self.ui.tabWidget.hide()
+            if hasattr(self.ui, 'inputsCollapsibleButton'):
+                 self.ui.inputsCollapsibleButton.hide()
             self.installWidget.show()
             self.installLabel.setText(f"The following packages are missing:\n{', '.join(missingPackages)}\n\nPlease install them to use this module.")
             self.installButton.show()
         else:
             self.installWidget.hide()
-            self.ui.tabWidget.show()
+            if hasattr(self.ui, 'inputsCollapsibleButton'):
+                 self.ui.inputsCollapsibleButton.show()
 
     def onInstallButton(self):
         missingPackages = self.logic.checkDependencies()
@@ -275,9 +270,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.setParameterNode(None)
         # Explicitly clear selectors to prevent Subject Hierarchy warnings during close
         for selector in [self.ui.inputVolumeSelector, self.ui.inputLocalizerSelector, self.ui.outputStep1Selector, self.ui.outputStep2Selector, 
-                         self.ui.outputCordSelector, self.ui.outputCanalSelector, self.ui.outputLevelsSelector,
-                         self.ui.loadInputSelector, self.ui.loadStep1Selector, self.ui.loadStep2Selector, self.ui.loadCordSelector, 
-                         self.ui.loadCanalSelector, self.ui.loadLevelsSelector]:
+                         self.ui.outputCordSelector, self.ui.outputCanalSelector, self.ui.outputLevelsSelector]:
             selector.setCurrentNode(None)
 
     def onSceneEndClose(self, caller, event):
@@ -318,13 +311,6 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.applyTerminologyCheckBox.checked = self._parameterNode.GetParameter("UseStandardSegmentNames") == "true"
         self.ui.isoCheckBox.checked = self._parameterNode.GetParameter("Iso") == "true"
 
-        self.ui.loadInputSelector.setCurrentNode(self._parameterNode.GetNodeReference("InputVolume"))
-        self.ui.loadStep1Selector.setCurrentNode(self._parameterNode.GetNodeReference("OutputStep1"))
-        self.ui.loadStep2Selector.setCurrentNode(self._parameterNode.GetNodeReference("OutputStep2"))
-        self.ui.loadCordSelector.setCurrentNode(self._parameterNode.GetNodeReference("OutputCord"))
-        self.ui.loadCanalSelector.setCurrentNode(self._parameterNode.GetNodeReference("OutputCanal"))
-        self.ui.loadLevelsSelector.setCurrentNode(self._parameterNode.GetNodeReference("OutputLevels"))
-
         self.onSelect()
         self._updatingGUIFromParameterNode = False
 
@@ -346,19 +332,6 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self._parameterNode.SetParameter("UseStandardSegmentNames", "true" if self.ui.applyTerminologyCheckBox.checked else "false")
         self._parameterNode.SetParameter("Iso", "true" if self.ui.isoCheckBox.checked else "false")
 
-        if caller == self.ui.loadInputSelector:
-             self._parameterNode.SetNodeReferenceID("InputVolume", self.ui.loadInputSelector.currentNodeID)
-        if caller == self.ui.loadStep1Selector:
-             self._parameterNode.SetNodeReferenceID("OutputStep1", self.ui.loadStep1Selector.currentNodeID)
-        if caller == self.ui.loadStep2Selector:
-             self._parameterNode.SetNodeReferenceID("OutputStep2", self.ui.loadStep2Selector.currentNodeID)
-        if caller == self.ui.loadCordSelector:
-             self._parameterNode.SetNodeReferenceID("OutputCord", self.ui.loadCordSelector.currentNodeID)
-        if caller == self.ui.loadCanalSelector:
-             self._parameterNode.SetNodeReferenceID("OutputCanal", self.ui.loadCanalSelector.currentNodeID)
-        if caller == self.ui.loadLevelsSelector:
-             self._parameterNode.SetNodeReferenceID("OutputLevels", self.ui.loadLevelsSelector.currentNodeID)
-
         self._parameterNode.EndModify(wasModified)
 
     def onSelect(self):
@@ -375,9 +348,9 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             return
 
         # Determine intended type based on selector
-        isSegmentation = selector in [self.ui.loadStep1Selector, self.ui.loadStep2Selector, self.ui.loadLevelsSelector, self.ui.inputLocalizerSelector]
-        isCord = selector == self.ui.loadCordSelector
-        isCanal = selector == self.ui.loadCanalSelector
+        isSegmentation = selector in [self.ui.outputStep1Selector, self.ui.outputStep2Selector, self.ui.outputLevelsSelector, self.ui.inputLocalizerSelector]
+        isCord = selector == self.ui.outputCordSelector
+        isCanal = selector == self.ui.outputCanalSelector
         
         if isSegmentation:
             # Load as labelmap, convert to segmentation
@@ -387,7 +360,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 segNode.SetName(os.path.splitext(os.path.basename(file_path))[0])
                 slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(labelNode, segNode)
                 slicer.mrmlScene.RemoveNode(labelNode)
-                if self.ui.loadApplyTerminologyCheckBox.checked:
+                if self.ui.applyTerminologyCheckBox.checked:
                     self.logic.applyTotalSpineSegTerminology(segNode)
                 
                 segNode.CreateDefaultDisplayNodes()
@@ -399,7 +372,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if volNode:
                 selector.setCurrentNode(volNode)
                 # Note: onLoadCordChanged/onLoadCanalChanged will trigger and apply style/foreground
-        elif selector == self.ui.loadInputSelector or selector == self.ui.inputVolumeSelector:
+        elif selector == self.ui.inputVolumeSelector:
              # Load as background
             volNode = slicer.util.loadVolume(file_path, {"show": True})
             if volNode:
@@ -496,9 +469,7 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def onProcessingFinished(self, success):
         self.ui.applyButton.enabled = True
         if success:
-            self.ui.loadApplyTerminologyCheckBox.checked = self.ui.applyTerminologyCheckBox.checked
             self.ui.statusLabel.appendPlainText("\\n" + _("Processing finished."))
-            self.ui.tabWidget.setCurrentIndex(1)
         else:
             self.ui.statusLabel.appendPlainText("\\n" + _("Processing failed."))
 
