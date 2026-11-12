@@ -23,8 +23,7 @@ See more information in the <a href="https://github.com/neuropoly/SlicerTotalSpi
         self.parent.acknowledgementText = _("""
 This module uses <a href="https://github.com/neuropoly/totalspineseg">TotalSpineSeg</a>.
 If you use the TotalSpineSeg function from this software in your research, please cite:
-Warszawer, Y., Molinier, N., Valosek, J., Benveniste, P. L., Bédard, S., Shirbint, E., ... & Cohen-Adad, J. (2025). 
-TotalSpineSeg: Robust Spine Segmentation with Landmark-Based Labeling in MRI. ResearchGate preprint.
+Warszawer, Y., Molinier, N., Valošek, J. et al. TotalSpineSeg: automated whole-spine vertebral segmentation with high robustness to labeling errors. Eur Radiol (2026). <a href="https://doi.org/10.1007/s00330-026-13008-2">https://doi.org/10.1007/s00330-026-13008-2</a>
 """)
 
 class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
@@ -716,7 +715,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         ScriptedLoadableModuleLogic.__init__(self)
         self.logCallback = None
         self.clearOutputFolder = True
-        self.totalSpineSegPythonPackageDownloadUrl = "https://github.com/neuropoly/totalspineseg/archive/refs/tags/r20251124.zip"
+        self.totalSpineSegPythonPackageDownloadUrl = "https://github.com/neuropoly/totalspineseg/archive/refs/tags/r20260730.zip"
         self.processRunner = None
         self.processingFinishedCallback = None
 
@@ -750,13 +749,14 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         return versionInfo
 
     def checkDependencies(self, force=False):
-        import importlib
+        import importlib.util
         importlib.invalidate_caches()
         from packaging.requirements import Requirement
 
         settings = slicer.app.userSettings()
         settingsKey = "TotalSpineSeg/DependencyCheckPassed"
-        if not force and settings.value(settingsKey) == "true":
+        # User settings survive a Slicer reinstall, so the cached result is only trusted if the package is still present
+        if not force and settings.value(settingsKey) == "true" and importlib.util.find_spec("totalspineseg"):
             return []
 
         missingPackages = []
@@ -860,7 +860,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             slicer.util.pip_install("nnunetv2")
 
         if "totalspineseg" in packages:
-            slicer.util.pip_install(self.totalSpineSegPythonPackageDownloadUrl)
+            slicer.util.pip_install([self.totalSpineSegPythonPackageDownloadUrl, "kornia<0.8.3"])
 
         return False
 

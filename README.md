@@ -12,7 +12,7 @@ It is adapted from the [SlicerTotalSegmentator](https://github.com/lassoan/Slice
 If you use this extension in your research, please cite the following papers:
 
 **TotalSpineSeg:**
-> Warszawer, Yehuda & Molinier, Nathan & Valosek, Jan & Benveniste, Pierre-Louis & Bédard, Sandrine & Shirbint, Emanuel & Mohamed, Feroze & Tsagkas, Charidimos & Kolind, Shannon & Lynd, Larry & Oh, Jiwon & Prat, Alexandre & Tam, Roger & Traboulsee, Anthony & Patten, Scott & Lee, Lisa Eunyoung & Achiron, Anat & Cohen-Adad, Julien. (2025). TotalSpineSeg: Robust Spine Segmentation with Landmark-Based Labeling in MRI. [10.13140/RG.2.2.31318.56649](https://doi.org/10.13140/RG.2.2.31318.56649).
+> Warszawer, Y., Molinier, N., Valošek, J. *et al.* TotalSpineSeg: automated whole-spine vertebral segmentation with high robustness to labeling errors. *Eur Radiol* (2026). [https://doi.org/10.1007/s00330-026-13008-2](https://doi.org/10.1007/s00330-026-13008-2)
 
 **nnU-Net:**
 > Isensee, F., Jaeger, P.F., Kohl, S.A.A. et al. nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation. Nat Methods 18, 203–211 (2021). [https://doi.org/10.1038/s41592-020-01008-z](https://doi.org/10.1038/s41592-020-01008-z)
