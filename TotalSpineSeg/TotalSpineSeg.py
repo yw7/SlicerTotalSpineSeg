@@ -1012,10 +1012,12 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             startupEnv = slicer.util.startupEnvironment()
             for key, value in startupEnv.items():
                 env.insert(key, value)
+            env.insert("PYTHONUNBUFFERED", "1")
             self.processRunner.setProcessEnvironment(env)
+            self.processRunner.setProcessChannelMode(qt.QProcess.MergedChannels)
+            self.processOutputBuffer = ""
             
             self.processRunner.connect('readyReadStandardOutput()', self.onProcessOutput)
-            self.processRunner.connect('readyReadStandardError()', self.onProcessOutput)
             self.processRunner.connect('finished(int, QProcess::ExitStatus)', lambda exitCode, exitStatus: self.onProcessFinished(
                 exitCode, outputStep1, outputStep2, outputCord, outputCanal, outputLevels, useStandardNames, tempFolder, startTime, outputFolder))
             
@@ -1024,15 +1026,20 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
     def onProcessOutput(self):
         if not self.processRunner:
             return
-        self.processRunner.setReadChannel(qt.QProcess.StandardOutput)
-        while self.processRunner.canReadLine():
-            self.log(self.processRunner.readLine().data().decode('utf-8').rstrip())
-        self.processRunner.setReadChannel(qt.QProcess.StandardError)
-        while self.processRunner.canReadLine():
-            self.log(self.processRunner.readLine().data().decode('utf-8').rstrip())
+        # Progress bars (tqdm) end lines with '\r' rather than '\n'
+        import re
+        self.processOutputBuffer += self.processRunner.readAllStandardOutput().data().decode('utf-8', errors='replace')
+        *lines, self.processOutputBuffer = re.split(r'[\r\n]+', self.processOutputBuffer)
+        for line in lines:
+            if line.strip():
+                self.log(line.rstrip())
 
     def onProcessFinished(self, exitCode, outputStep1, outputStep2, outputCord, outputCanal, outputLevels, useStandardNames, tempFolder, startTime, outputFolder):
         import time
+        self.onProcessOutput()
+        if self.processOutputBuffer.strip():
+            self.log(self.processOutputBuffer.rstrip())
+            self.processOutputBuffer = ""
         if exitCode != 0:
             self.log("Process failed with exit code " + str(exitCode))
             if self.processingFinishedCallback:
