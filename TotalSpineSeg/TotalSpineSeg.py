@@ -699,7 +699,12 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         else:
             slicer.util.restart()
 
-    def addLog(self, text):
+    def addLog(self, text, replaceLast=False):
+        if replaceLast:
+            cursor = self.ui.statusLabel.textCursor()
+            cursor.movePosition(qt.QTextCursor.End)
+            cursor.select(qt.QTextCursor.BlockUnderCursor)
+            cursor.removeSelectedText()
         self.ui.statusLabel.appendPlainText(text)
         slicer.app.processEvents()
 
@@ -717,12 +722,17 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         self.clearOutputFolder = True
         self.totalSpineSegPythonPackageDownloadUrl = "https://github.com/neuropoly/totalspineseg/archive/refs/tags/r20260730.zip"
         self.processRunner = None
+        self.processOutputBuffer = ""
+        self.progressLineShown = False
         self.processingFinishedCallback = None
-
-    def log(self, text):
-        logging.info(text)
+    def log(self, text, replaceLast=False):
+        if not replaceLast:
+            logging.info(text)
         if self.logCallback:
-            self.logCallback(text)
+            if replaceLast:
+                self.logCallback(text, replaceLast=True)
+            else:
+                self.logCallback(text)
 
     def setDefaultParameters(self, parameterNode):
         if not parameterNode.GetParameter("UseStandardSegmentNames"):
@@ -1016,6 +1026,7 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             self.processRunner.setProcessEnvironment(env)
             self.processRunner.setProcessChannelMode(qt.QProcess.MergedChannels)
             self.processOutputBuffer = ""
+            self.progressLineShown = False
             
             self.processRunner.connect('readyReadStandardOutput()', self.onProcessOutput)
             self.processRunner.connect('finished(int, QProcess::ExitStatus)', lambda exitCode, exitStatus: self.onProcessFinished(
@@ -1026,19 +1037,24 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
     def onProcessOutput(self):
         if not self.processRunner:
             return
-        # Progress bars (tqdm) end lines with '\r' rather than '\n'
+        # Progress bars (tqdm) redraw the current line using '\r'; show them in place instead of appending
         import re
         self.processOutputBuffer += self.processRunner.readAllStandardOutput().data().decode('utf-8', errors='replace')
-        *lines, self.processOutputBuffer = re.split(r'[\r\n]+', self.processOutputBuffer)
-        for line in lines:
-            if line.strip():
-                self.log(line.rstrip())
+        parts = re.split(r'(\r\n|\n|\r)', self.processOutputBuffer)
+        self.processOutputBuffer = parts.pop()
+        for line, terminator in zip(parts[::2], parts[1::2]):
+            self.logProcessLine(line, terminator == '\r')
+
+    def logProcessLine(self, line, isProgress):
+        if line.strip():
+            self.log(line.rstrip(), replaceLast=self.progressLineShown)
+        self.progressLineShown = isProgress and (bool(line.strip()) or self.progressLineShown)
 
     def onProcessFinished(self, exitCode, outputStep1, outputStep2, outputCord, outputCanal, outputLevels, useStandardNames, tempFolder, startTime, outputFolder):
         import time
         self.onProcessOutput()
         if self.processOutputBuffer.strip():
-            self.log(self.processOutputBuffer.rstrip())
+            self.logProcessLine(self.processOutputBuffer, False)
             self.processOutputBuffer = ""
         if exitCode != 0:
             self.log("Process failed with exit code " + str(exitCode))
