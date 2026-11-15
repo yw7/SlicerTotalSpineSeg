@@ -18,7 +18,7 @@ class TotalSpineSeg(ScriptedLoadableModule):
         self.parent.contributors = ["Yehuda Warszawer (Sheba Medical Center), Nathan Molinier (Polytechnique Montreal), Anat Achiron, Julien Cohen-Adad"]
         self.parent.helpText = _("""
 3D Slicer extension for fully automatic spine MRI and CT segmentation using TotalSpineSeg AI model.
-See more information in the <a href="https://github.com/neuropoly/SlicerTotalSpineSeg">extension documentation</a>.
+See more information in the <a href="https://github.com/yw7/SlicerTotalSpineSeg">extension documentation</a>.
 """)
         self.parent.acknowledgementText = _("""
 This module uses <a href="https://github.com/neuropoly/totalspineseg">TotalSpineSeg</a>.

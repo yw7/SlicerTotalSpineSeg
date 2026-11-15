@@ -4,6 +4,14 @@
 
 3D Slicer extension for fully automatic spine MRI and CT segmentation using the [TotalSpineSeg AI model](https://github.com/neuropoly/totalspineseg).
 
+## Modules
+
+- **TotalSpineSeg** (Segmentation category): segments vertebrae, intervertebral discs, spinal cord and spinal canal in a loaded MRI or CT volume, and loads the results as Slicer segmentations.
+
+## License
+
+This extension is distributed under the [GNU LGPL v3.0](LICENSE.txt) license.
+
 ## Acknowledgement
 
 This extension is based on the [TotalSpineSeg](https://github.com/neuropoly/totalspineseg) tool.
