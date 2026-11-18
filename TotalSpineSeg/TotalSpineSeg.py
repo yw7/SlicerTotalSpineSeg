@@ -461,10 +461,11 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             missingWeights, weightsFolder = self.logic.missingModelWeights()
         except Exception as e:
             logging.warning(f"Could not check whether the TotalSpineSeg model weights are installed: {e}")
-            missingWeights = []
+            self.ui.statusLabel.plainText = _("Could not check the model weights: {error}").format(error=str(e))
+            return
         if missingWeights:
             if not slicer.util.confirmOkCancelDisplay(
-                _("The TotalSpineSeg model weights are not installed yet. They will be downloaded now (about 2 GB to download, about 4 GB of disk space, may take several minutes) and saved to:\n{folder}\n\nClick OK to proceed.").format(folder=weightsFolder),
+                _("The TotalSpineSeg model weights are not installed yet. They will be downloaded now (up to about 2 GB to download and 4 GB of disk space, may take several minutes) and saved to:\n{folder}\n\nClick OK to proceed.").format(folder=weightsFolder),
                 _("Confirm model download"),
                 detailedText=_("Models to download: {models}").format(models=", ".join(missingWeights))):
                 self.ui.statusLabel.plainText = _("Model download cancelled.")
@@ -772,6 +773,16 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
             versionInfo += "Download URL: " + downloadUrl
         return versionInfo
 
+    @staticmethod
+    def processEnvironmentValue(name):
+        """Return the value of an environment variable as the TotalSpineSeg process sees it
+        (system environment updated with Slicer's startup environment, as in process()), or None if not set."""
+        startupEnv = slicer.util.startupEnvironment()
+        if name in startupEnv:
+            return startupEnv[name]
+        systemEnv = qt.QProcessEnvironment.systemEnvironment()
+        return systemEnv.value(name) if systemEnv.contains(name) else None
+
     def missingModelWeights(self):
         """Return the TotalSpineSeg model weights that still need to be downloaded, and the folder they will be saved to.
 
@@ -784,8 +795,10 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         from pathlib import Path
         importlib.invalidate_caches()
         zipUrls = dict(meta.split(", ") for meta in importlib.metadata.metadata("totalspineseg").get_all("Project-URL") if meta.startswith("Dataset"))
-        if "TOTALSPINESEG_DATA" in os.environ:
-            dataPath = Path(os.environ["TOTALSPINESEG_DATA"])
+        # Same environment as the TotalSpineSeg process started in process()
+        dataDir = self.processEnvironmentValue("TOTALSPINESEG_DATA")
+        if dataDir is not None:
+            dataPath = Path(dataDir)
         else:
             dataPath = Path(importlib.util.find_spec("totalspineseg").submodule_search_locations[0]) / "models"
         resultsPath = dataPath / "nnUNet" / "results"
