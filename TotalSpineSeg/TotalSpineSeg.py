@@ -867,7 +867,18 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         # If PyTorch was in packages, we might have installed torch libs.
         
         if "nnunetv2" in packages:
-            slicer.util.pip_install("nnunetv2")
+            # Install nnunetv2 through the NNUNet extension, so that pip does not install or replace
+            # PyTorch and other packages that Slicer manages (SimpleITK, requests)
+            import sys
+            import SlicerNNUNetLib
+            nnunetLogic = SlicerNNUNetLib.InstallLogic(doAskConfirmation=False)
+            nnunetLogic.progressInfo.connect(self.log)
+            # macOS with Rosetta2 requires nnunetv2 2.7.0 or higher, see https://github.com/MIC-DKFZ/nnUNet/issues/2742
+            nnunetRequirement = "nnunetv2>=2.7.0" if sys.platform == "darwin" else "nnunetv2"
+            if not nnunetLogic.setupPythonRequirements(nnunetRequirement):
+                raise RuntimeError(_("Failed to install nnunetv2. See the log for details."))
+            if nnunetLogic.needsRestart:
+                return True
 
         if "totalspineseg" in packages:
             slicer.util.pip_install([self.totalSpineSegPythonPackageDownloadUrl, "kornia<0.8.3"])
