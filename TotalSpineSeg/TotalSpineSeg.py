@@ -456,6 +456,21 @@ class TotalSpineSegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 traceback.print_exc()
                 return
 
+        # The first run downloads the model weights, so ask before starting the download
+        try:
+            missingWeights, weightsFolder = self.logic.missingModelWeights()
+        except Exception as e:
+            logging.warning(f"Could not check whether the TotalSpineSeg model weights are installed: {e}")
+            self.ui.statusLabel.plainText = _("Could not check the model weights: {error}").format(error=str(e))
+            return
+        if missingWeights:
+            if not slicer.util.confirmOkCancelDisplay(
+                _("The TotalSpineSeg model weights are not installed yet. They will be downloaded now (up to about 2 GB to download and 4 GB of disk space, may take several minutes) and saved to:\n{folder}\n\nClick OK to proceed.").format(folder=weightsFolder),
+                _("Confirm model download"),
+                detailedText=_("Models to download: {models}").format(models=", ".join(missingWeights))):
+                self.ui.statusLabel.plainText = _("Model download cancelled.")
+                return
+
         self.ui.applyButton.enabled = False
         self.ui.statusLabel.plainText = "Processing started..."
         slicer.app.processEvents()
@@ -757,6 +772,44 @@ class TotalSpineSegLogic(ScriptedLoadableModuleLogic):
         if downloadUrl:
             versionInfo += "Download URL: " + downloadUrl
         return versionInfo
+
+    @staticmethod
+    def processEnvironmentValue(name):
+        """Return the value of an environment variable as the TotalSpineSeg process sees it
+        (system environment updated with Slicer's startup environment, as in process()), or None if not set."""
+        startupEnv = slicer.util.startupEnvironment()
+        if name in startupEnv:
+            return startupEnv[name]
+        systemEnv = qt.QProcessEnvironment.systemEnvironment()
+        return systemEnv.value(name) if systemEnv.contains(name) else None
+
+    def missingModelWeights(self):
+        """Return the TotalSpineSeg model weights that still need to be downloaded, and the folder they will be saved to.
+
+        Uses the same locations as totalspineseg's init_inference, without importing totalspineseg
+        (importing it loads PyTorch and nnU-Net).
+        """
+        import importlib
+        import importlib.metadata
+        import importlib.util
+        from pathlib import Path
+        importlib.invalidate_caches()
+        zipUrls = dict(meta.split(", ") for meta in importlib.metadata.metadata("totalspineseg").get_all("Project-URL") if meta.startswith("Dataset"))
+        # Same environment as the TotalSpineSeg process started in process()
+        dataDir = self.processEnvironmentValue("TOTALSPINESEG_DATA")
+        if dataDir is not None:
+            dataPath = Path(dataDir)
+        else:
+            dataPath = Path(importlib.util.find_spec("totalspineseg").submodule_search_locations[0]) / "models"
+        resultsPath = dataPath / "nnUNet" / "results"
+        if all((resultsPath / dataset).is_dir() for dataset in zipUrls):
+            return [], dataPath / "nnUNet"
+        release = list(zipUrls.values())[0].split("/")[-2]
+        exportsPath = dataPath / "nnUNet" / "exports"
+        # A model is only downloaded if it is neither installed nor its zip file already downloaded
+        missing = [dataset for dataset, url in zipUrls.items()
+                   if not (resultsPath / release / dataset).is_dir() and not (exportsPath / url.split("/")[-1]).is_file()]
+        return missing, dataPath / "nnUNet"
 
     def checkDependencies(self, force=False):
         import importlib.util
